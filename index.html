@@ -500,7 +500,8 @@
       <label>Code d'accès</label>
       <input type="text" id="generated-code-display" readonly style="text-align:center; font-weight:800; letter-spacing:2px; font-size:18px;">
     </div>
-    <button class="btn" onclick="openProfileView()" style="margin-top:8px;">Continuer — créer mon profil</button>
+    <button class="btn secondary" id="copy-code-btn" onclick="copyAccessCode()" style="margin-top:4px;">Copier le code</button>
+    <button class="btn" onclick="openProfileView()" style="margin-top:10px;">Continuer — créer mon profil</button>
   </div>
 
   <!-- ============ PROFIL DE L'AGENCE ============ -->
@@ -851,6 +852,32 @@ async function rpc(fn, args){
 }
 
 let toastTimer = null;
+/* Copie du code d'accès dans le presse-papiers */
+async function copyAccessCode(){
+  const input = document.getElementById('generated-code-display');
+  const code = input.value;
+  const btn = document.getElementById('copy-code-btn');
+  let ok = false;
+  try{
+    if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(code); ok = true; }
+  }catch(_){}
+  if(!ok){
+    try{
+      input.removeAttribute('readonly');
+      input.focus(); input.select(); input.setSelectionRange(0, code.length);
+      ok = document.execCommand('copy');
+      input.setAttribute('readonly','');
+      input.blur();
+    }catch(_){}
+  }
+  if(ok){
+    showToast('Code copié !');
+    if(btn){ btn.textContent = 'Code copié ✓'; setTimeout(()=>{ btn.textContent = 'Copier le code'; }, 2000); }
+  } else {
+    showToast('Copie impossible : maintenez le code appuyé pour le copier.');
+  }
+}
+
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -920,6 +947,7 @@ let adminCode = null;
 let adminReports = [];
 let adminAgencies = [];
 let adminSelectedAgency = null;
+let adminProfiles = {};
 
 /* Stockage temporaire des images de carte d'identité en cours de dépôt */
 let idData = { report:{recto:null, verso:null}, profile:{recto:null, verso:null} };
@@ -1210,6 +1238,7 @@ async function checkAdminCode(){
     if(ok){
       adminCode = val;
       adminSelectedAgency = null;
+      adminProfiles = {};
       const _as = document.getElementById('admin-search'); if(_as) _as.value = '';
       closeModal('modal-admin-login');
       goTo('admin');
@@ -1968,6 +1997,35 @@ function adminAgencyCard(a, clickable){
     +'</div></div></div>';
 }
 
+/* Profil complet de l'agence (écran admin) : nom, carte d'identité du gérant
+   recto/verso, emplacement et contact. Les images sont chargées à la demande
+   via la fonction serveur admin_get_agency_profile (réservée à l'admin). */
+function adminProfileBlock(a){
+  const p = adminProfiles[a.accessCode];
+  const loading = !p;
+  const recto = safeImg(p && p.idRecto);
+  const verso = safeImg(p && p.idVerso);
+  const slot = src => src
+    ? '<div class="id-slot filled"><img src="'+src+'" onclick="openLightbox(this.src)"></div>'
+    : '<div class="id-slot" style="cursor:default;">'+(loading ? '…' : ic('creditCard',22))+'</div>';
+  const val = v => '<div class="info-value" style="margin-top:2px;">'
+    +(v ? esc(v) : '<span style="color:var(--text-3); font-weight:600;">Non renseigné</span>')+'</div>';
+  const name = (p && p.agence) || a.agence;
+  const place = (p && p.emplacement) || a.emplacement;
+  const contact = (p && p.contact) || a.contact;
+  return '<div class="section-label">Profil de l\'agence</div>'
+    +'<div class="admin-row">'
+    +'<div class="field"><label>Nom de l\'agence</label>'+val(name)+'</div>'
+    +'<div class="field"><label>Carte d\'identité du gérant</label>'
+      +'<div class="field-row2" style="margin-top:6px;">'
+        +'<div><label style="font-size:11px;">Recto</label>'+slot(recto)+'</div>'
+        +'<div><label style="font-size:11px;">Verso</label>'+slot(verso)+'</div>'
+      +'</div></div>'
+    +'<div class="field"><label>Emplacement de l\'agence</label>'+val(place)+'</div>'
+    +'<div class="field" style="margin-bottom:0;"><label>Contact de l\'agence</label>'+val(contact)+'</div>'
+    +'</div>';
+}
+
 function adminReportRow(r, showDate){
   const meta = effStatus(r);
   return '<div class="admin-row">'
@@ -1981,10 +2039,17 @@ function adminReportRow(r, showDate){
     +'</div>';
 }
 
-function selectAdminAgency(code){
+async function selectAdminAgency(code){
   adminSelectedAgency = code;
   renderAdminList();
   const l = document.getElementById('admin-list'); if(l) l.scrollTop = 0;
+  if(!adminProfiles[code]){
+    try{
+      const p = await rpc('admin_get_agency_profile', { p_admin_code: adminCode, p_access_code: code });
+      adminProfiles[code] = p || {};
+    } catch(e){ adminProfiles[code] = {}; dbError(e); }
+    if(adminSelectedAgency === code) renderAdminList();
+  }
 }
 function backToAdminAgencies(){
   adminSelectedAgency = null;
@@ -1996,7 +2061,7 @@ function renderAdminList(){
   if(!list || !adminCode) return;
   const searchEl = document.getElementById('admin-search');
 
-  /* Fiche d'une agence : tous ses signalements, modifiables */
+  /* Fiche d'une agence : son profil et tous ses signalements, modifiables */
   const sel = adminSelectedAgency ? adminAgencies.find(x=>x.accessCode === adminSelectedAgency) : null;
   if(sel){
     if(searchEl) searchEl.parentElement.parentElement.style.display = 'none';
@@ -2005,6 +2070,7 @@ function renderAdminList(){
     list.innerHTML = '<button class="btn secondary" style="margin:6px 0 4px;" onclick="backToAdminAgencies()">← Toutes les agences</button>'
       + '<div class="section-label" style="margin-top:14px;">Agence</div>'
       + adminAgencyCard(sel, false)
+      + adminProfileBlock(sel)
       + '<div class="section-label">Signalements de l\'agence ('+mine.length+')</div>'
       + (mine.map(r=>adminReportRow(r, true)).join('')
          || '<div class="empty-state"><div class="ic-circle">'+ic('briefcase',26)+'</div><p>Aucun signalement pour cette agence</p></div>');
