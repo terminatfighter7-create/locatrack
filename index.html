@@ -1077,7 +1077,7 @@ async function handleStripeReturn(){
   if(plan !== 'mensuel' && plan !== 'annuel') return false;
   history.replaceState(null, '', location.pathname);
   selectedPlanIndex = plan === 'annuel' ? 1 : 0;
-  await completeSubscription('stripe', null, null);
+  await completeSubscription('card', 'stripe', null);
   return true;
 }
 
