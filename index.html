@@ -839,7 +839,7 @@ async function rpc(fn, args){
       body: JSON.stringify(args || {})
     });
   } catch(e){ throw new Error('network'); }
-  if(!res.ok) throw new Error('http ' + res.status);
+  if(!res.ok){ let d=''; try{ d = (await res.text()).slice(0,300); }catch(_){} throw new Error('http ' + res.status + ' ' + d); }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
@@ -1096,7 +1096,12 @@ async function completeSubscription(method, reference, last4){
     document.getElementById('generated-code-display').value = code;
     goTo('code');
     return true;
-  } catch(e){ dbError(e); return false; }
+  } catch(e){
+    dbError(e);
+    /* Diagnostic : affiche la vraie raison de l'échec */
+    try{ alert("Détail technique (envoyez-le à votre assistant) :\n" + (e && e.message ? e.message : e)); }catch(_){}
+    return false;
+  }
 }
 
 /* =========================================================================
