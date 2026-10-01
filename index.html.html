@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Loca'Track</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --bg-2:#0f0f12;
+    --surface:#18181b; --surface-2:#212024; --surface-3:#2a292e;
+    --primary:#ff7a1a; --primary-light:#ffa15c; --primary-dark:#c9520a;
+    --danger:#e6485a; --success:#2fd67f; --warn:#f4b740;
+    --text:#f6f3f0; --text-2:#9c9895; --text-3:#6b6866; --border:#28262a;
+    --radius-lg:22px; --radius-md:16px; --radius-sm:11px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="light"]){
+      --bg:#0a0a0c; --bg-2:#0f0f12; --surface:#18181b; --surface-2:#212024;
+      --surface-3:#2a292e; --primary:#ff7a1a; --primary-light:#ffa15c;
+      --primary-dark:#c9520a; --danger:#e6485a; --success:#2fd67f; --warn:#f4b740;
+      --text:#f6f3f0; --text-2:#9c9895; --text-3:#6b6866; --border:#28262a;
+    }
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Manrope',system-ui,-apple-system,sans-serif;
+    display:flex; justify-content:center; min-height:100vh; padding:20px 10px; overflow-x:hidden;
+  }
+  svg.ic{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block; }
+
+  .app{
+    width:100%; max-width:430px; height:860px; max-height:94vh;
+    background:linear-gradient(180deg, var(--bg-2), var(--bg) 30%);
+    border-radius:32px; border:1px solid var(--border);
+    box-shadow:0 40px 90px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);
+    position:relative; overflow:hidden;
+  }
+  .noise{ position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background:radial-gradient(circle at 15% 0%, rgba(255,122,26,.10), transparent 45%),
+               radial-gradient(circle at 100% 30%, rgba(255,122,26,.06), transparent 40%); }
+
+  .view{ position:absolute; inset:0; display:none; flex-direction:column; }
+  .view.active{ display:flex; }
+
+  /* ---------- transitions ---------- */
+  @keyframes viewIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  .view.active{ animation:viewIn .38s cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes slideInR{ from{opacity:0; transform:translateX(36px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes slideInL{ from{opacity:0; transform:translateX(-36px);} to{opacity:1; transform:translateX(0);} }
+  .tabpane{ animation:viewIn .3s ease both; }
+  .tabpane.from-right{ animation:slideInR .32s cubic-bezier(.22,.9,.3,1) both; }
+  .tabpane.from-left{ animation:slideInL .32s cubic-bezier(.22,.9,.3,1) both; }
+
+  h1{ font-size:26px; font-weight:800; letter-spacing:-.3px; }
+  h2{ font-size:19px; font-weight:800; letter-spacing:-.2px; }
+  p{ color:var(--text-2); line-height:1.5; font-size:14px; }
+
+  .btn, .tab, .icon-btn, .plan, button, [onclick]{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  /* ---------- buttons ---------- */
+  .btn{
+    position:relative; overflow:hidden; width:100%; padding:16px; border:none; border-radius:15px;
+    background:linear-gradient(135deg, var(--primary-light), var(--primary) 55%, var(--primary-dark));
+    color:#120800; font-weight:800; font-size:15px; cursor:pointer; letter-spacing:.2px;
+    box-shadow:0 10px 22px -6px rgba(255,122,26,.55);
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 14px 28px -6px rgba(255,122,26,.65); }
+  .btn:active{ transform:translateY(0) scale(.96); }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn.secondary{
+    background:var(--surface-2); color:var(--text); box-shadow:none; border:1px solid var(--border);
+  }
+  .btn.danger{ background:linear-gradient(135deg,#ff6b7d,var(--danger)); color:#210306; box-shadow:0 10px 22px -8px rgba(230,72,90,.5); }
+  .btn.small{ padding:10px 14px; font-size:13px; border-radius:11px; width:auto; }
+  .ripple{ position:absolute; border-radius:50%; background:rgba(0,0,0,.18); transform:scale(0); animation:rippleAnim .55s ease-out forwards; pointer-events:none; }
+  @keyframes rippleAnim{ to{ transform:scale(3.2); opacity:0; } }
+
+  .icon-btn{
+    width:42px; height:42px; border-radius:13px; background:var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2);
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), background .15s ease, color .15s ease; flex-shrink:0;
+  }
+  .icon-btn:hover{ background:var(--surface-3); color:var(--text); transform:translateY(-1px); }
+  .icon-btn:active{ transform:scale(.9); }
+  .icon-btn.ghost-admin{ position:absolute; top:22px; right:22px; z-index:40; background:rgba(255,255,255,.07); backdrop-filter:blur(6px); }
+
+  /* Bouton Accueil flottant : placé en bas pour ne jamais chevaucher les
+     en-têtes de page (titres, bouton retour, bouton admin). */
+  .fab-home{
+    position:absolute; right:16px; bottom:calc(20px + env(safe-area-inset-bottom,0px)); z-index:45;
+    width:46px; height:46px; border-radius:50%;
+    background:var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; color:var(--text-2);
+    box-shadow:0 10px 24px -6px rgba(0,0,0,.55);
+    cursor:pointer; transition:transform .15s cubic-bezier(.34,1.56,.64,1), background .15s ease, color .15s ease;
+  }
+  .toast{ position:absolute; left:50%; bottom:calc(84px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,12px);
+    z-index:70; max-width:86%; background:var(--surface-3); color:var(--text); border:1px solid var(--border);
+    padding:12px 16px; border-radius:14px; font-size:13px; font-weight:600; line-height:1.4; text-align:center;
+    box-shadow:0 12px 28px -8px rgba(0,0,0,.6); opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+  .fab-home:hover{ background:var(--surface-3); color:var(--text); transform:translateY(-2px); }
+  .fab-home:active{ transform:scale(.9); }
+  /* Sur l'écran principal (avec barre d'onglets), remonter le bouton pour ne pas la chevaucher */
+  .fab-home.above-tabbar{ bottom:calc(96px + env(safe-area-inset-bottom,0px)); }
+
+  /* ID card upload slots (recto/verso) */
+  .id-slot{ position:relative; height:88px; border-radius:13px; border:1.6px dashed var(--primary); color:var(--primary);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; background:rgba(255,122,26,.06);
+    overflow:hidden; margin-bottom:4px; transition:transform .15s ease; }
+  .id-slot:active{ transform:scale(.96); }
+  .id-slot img{ width:100%; height:100%; object-fit:cover; cursor:pointer; }
+  .id-slot.filled{ border-style:solid; border-color:var(--border); background:var(--surface-2); }
+
+  /* Agency profile chip (clickable) */
+  .agency-chip.clickable{ cursor:pointer; transition:transform .15s ease; border-radius:14px; padding:4px; margin:-4px; }
+  .agency-chip.clickable:active{ transform:scale(.96); }
+  .agency-chip-edit-hint{ color:var(--text-3); flex-shrink:0; }
+
+  /* =================== LANDING =================== */
+  #view-landing{ align-items:center; justify-content:center; text-align:center; position:relative; padding:26px; }
+  .brand-drop{
+    font-size:40px; font-weight:900; letter-spacing:-1px; text-transform:uppercase;
+    transform:translateY(-320px); opacity:0;
+    animation:dropIn 1.1s cubic-bezier(.17,.89,.32,1.28) forwards;
+  }
+  .brand-drop .lo{ color:var(--primary); text-shadow:0 0 30px rgba(255,122,26,.5); }
+  .brand-drop .tr{ color:var(--text); }
+  @keyframes dropIn{ 0%{transform:translateY(-320px); opacity:0;} 60%{transform:translateY(8px); opacity:1;} 80%{transform:translateY(-6px);} 100%{transform:translateY(0); opacity:1;} }
+  .brand-sub{ margin-top:10px; color:var(--text-2); font-size:13px; letter-spacing:2px; text-transform:uppercase;
+    opacity:0; animation:fadeUp .6s ease .9s forwards; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .landing-actions{ width:100%; margin-top:48px; display:flex; flex-direction:column; gap:12px;
+    opacity:0; animation:fadeUp .6s ease 1.15s forwards; }
+  .landing-line{ display:flex; align-items:center; gap:10px; margin:18px 0; opacity:.5; }
+  .landing-line span{ flex:1; height:1px; background:var(--border); }
+  .landing-line p{ font-size:11px; letter-spacing:1.5px; text-transform:uppercase; }
+
+  /* =================== ACCESS CODE / SUBSCRIPTION =================== */
+  .center-view{ padding:30px 24px; justify-content:center; }
+  .center-view .icon-hero{
+    width:64px; height:64px; border-radius:19px; background:var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; margin-bottom:22px; color:var(--primary);
+  }
+  .field{ margin-bottom:14px; }
+  label{ display:block; font-size:12px; font-weight:700; color:var(--text-2); margin-bottom:7px; letter-spacing:.3px; text-transform:uppercase; }
+  input[type=text], input[type=date], input[type=password], textarea{
+    width:100%; padding:14px 15px; border-radius:14px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text); font-family:inherit; font-size:14.5px; outline:none; transition:border-color .15s ease, background .15s ease;
+  }
+  input:focus, textarea:focus{ border-color:var(--primary); background:var(--surface-3); }
+  textarea{ resize:vertical; min-height:92px; }
+  .shake{ animation:shake .4s ease; }
+  @keyframes shake{ 10%,90%{transform:translateX(-2px);} 20%,80%{transform:translateX(4px);} 30%,50%,70%{transform:translateX(-8px);} 40%,60%{transform:translateX(8px);} }
+  .error-text{ color:var(--danger); font-size:12.5px; margin-top:8px; min-height:16px; }
+
+  /* =================== TOP NAV =================== */
+  .top-nav{ display:flex; align-items:center; gap:12px; padding:22px 22px 6px; flex-shrink:0; }
+  .top-title{ font-weight:800; font-size:17px; }
+
+  /* =================== SUBSCRIPTION =================== */
+  .plan{ display:flex; align-items:center; gap:14px; padding:17px; background:var(--surface); border:1px solid var(--border);
+    border-radius:17px; margin-bottom:12px; cursor:pointer; transition:border-color .2s ease, background .2s ease; }
+  .plan.selected{ border-color:var(--primary); background:var(--surface-2); }
+  .radio{ width:20px; height:20px; border-radius:50%; border:2px solid var(--text-3); flex-shrink:0; position:relative; transition:border-color .2s ease; }
+  .plan.selected .radio{ border-color:var(--primary); }
+  .plan.selected .radio::after{ content:''; position:absolute; inset:3px; border-radius:50%; background:var(--primary); }
+  .plan-name{ font-weight:700; font-size:14.5px; }
+  .plan-price{ color:var(--text-2); font-size:13px; margin-top:2px; }
+  .plan-sub{ font-size:11.5px; color:var(--text-3); margin-top:3px; }
+  .plan-yearly-equiv{ font-size:11px; color:var(--text-3); text-align:right; white-space:nowrap; margin-left:8px; }
+  .badge{ margin-left:auto; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800; color:#180800;
+    background:linear-gradient(135deg, var(--primary-light), var(--primary)); }
+  .feature{ display:flex; align-items:center; gap:12px; margin-bottom:13px; }
+  .feature .ic-wrap{ width:34px; height:34px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--primary); flex-shrink:0; }
+
+  /* =================== MAIN APP SHELL =================== */
+  #view-app{ padding:0; }
+  .app-body{ flex:1; position:relative; overflow:hidden; }
+  .tabpane{ position:absolute; inset:0; padding:22px; overflow-y:auto; display:none; }
+  .tabpane.active{ display:block; }
+
+  .tabbar{
+    display:flex; border-top:1px solid var(--border); background:rgba(15,15,18,.9); backdrop-filter:blur(10px);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px)); flex-shrink:0;
+  }
+  .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px 0; cursor:pointer;
+    color:var(--text-3); transition:color .2s ease, transform .15s ease; }
+  .tab.active{ color:var(--primary); }
+  .tab:active{ transform:scale(.9); }
+  .tab span{ font-size:10.5px; font-weight:700; letter-spacing:.2px; }
+  .tab .dot{ width:4px; height:4px; border-radius:50%; background:var(--primary); opacity:0; transition:opacity .2s ease; }
+  .tab.active .dot{ opacity:1; }
+
+  /* Home dashboard */
+  .home-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .agency-chip{ display:flex; align-items:center; gap:10px; }
+  .avatar-ring{ width:44px; height:44px; border-radius:14px; background:linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+    display:flex; align-items:center; justify-content:center; color:#180800; font-weight:800; font-size:16px; }
+  .agency-name{ font-weight:800; font-size:14.5px; }
+  .agency-sub{ font-size:11.5px; color:var(--text-3); }
+
+  .stat-row{ display:flex; gap:12px; margin-bottom:22px; }
+  .stat-card{ flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; }
+  .stat-num{ font-size:22px; font-weight:800; }
+  .stat-label{ font-size:11px; color:var(--text-3); margin-top:2px; }
+
+  .grid-actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:26px; }
+  .action-tile{
+    background:var(--surface); border:1px solid var(--border); border-radius:19px; padding:18px;
+    cursor:pointer; transition:transform .18s cubic-bezier(.34,1.56,.64,1), border-color .2s ease;
+    position:relative; overflow:hidden;
+  }
+  .action-tile::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--primary-light), var(--primary)); transform:scaleX(0); transform-origin:left;
+    transition:transform .25s ease; }
+  .action-tile:hover::before{ transform:scaleX(1); }
+  .action-tile:active{ transform:scale(.95); }
+  .action-tile .ic-wrap{ width:42px; height:42px; border-radius:13px; background:var(--surface-2); color:var(--primary);
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+  .action-tile h2{ margin-bottom:4px; }
+  .action-tile p{ font-size:12px; }
+
+  .section-title{ font-size:12px; font-weight:800; color:var(--text-2); letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+
+  .mini-row{ display:flex; align-items:center; gap:12px; padding:13px; background:var(--surface); border:1px solid var(--border);
+    border-radius:15px; margin-bottom:10px; }
+  .mini-ic{ width:34px; height:34px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .mini-name{ font-weight:700; font-size:13.5px; }
+  .mini-sub{ font-size:11.5px; color:var(--text-3); }
+
+  /* Forms */
+  .section-label{ color:var(--primary); font-weight:800; font-size:11.5px; letter-spacing:1.2px; text-transform:uppercase; margin:20px 0 12px; }
+  .field-row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .photo-input-hidden{ display:none; }
+  .photo-grid{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
+  .photo-thumb{ width:78px; height:78px; border-radius:13px; overflow:hidden; position:relative; border:1px solid var(--border); }
+  .photo-thumb img{ width:100%; height:100%; object-fit:cover; display:block; cursor:pointer; }
+  .photo-remove{ position:absolute; top:5px; right:5px; width:22px; height:22px; border-radius:50%; background:rgba(10,10,12,.75);
+    backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; }
+  .photo-remove svg{ width:12px; height:12px; }
+  .photo-add-tile{ width:78px; height:78px; border-radius:13px; border:1.6px dashed var(--primary); color:var(--primary);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; background:rgba(255,122,26,.06); transition:transform .15s ease; }
+  .photo-add-tile:active{ transform:scale(.92); }
+
+  .checkbox-row{ display:flex; gap:11px; align-items:flex-start; margin:18px 0 22px; }
+  .checkbox-row input{ margin-top:3px; accent-color:var(--primary); width:18px; height:18px; flex-shrink:0; }
+  .checkbox-row span{ font-size:12.5px; color:var(--text-2); line-height:1.45; }
+
+  /* Search */
+  .search-bar{ position:relative; margin-bottom:8px; }
+  .search-bar svg{ position:absolute; left:15px; top:50%; transform:translateY(-50%); color:var(--text-3); }
+  .search-bar input{ padding-left:42px; }
+  .hint{ font-size:11.5px; color:var(--text-3); margin:8px 0 16px; line-height:1.5; }
+  .result-card{ display:flex; align-items:center; gap:13px; padding:15px; background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; margin-bottom:10px; opacity:0; animation:cardIn .4s cubic-bezier(.22,.9,.3,1) forwards; cursor:pointer;
+    transition:border-color .2s ease, transform .15s ease; }
+  .result-card:active{ transform:scale(.98); }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .result-card:hover{ border-color:var(--primary); }
+  .status-pill{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:800; margin-top:4px; }
+  .status-confirme{ background:rgba(230,72,90,.14); color:var(--danger); }
+  .status-attente{ background:rgba(244,183,64,.14); color:var(--warn); }
+  .status-conteste{ background:rgba(255,122,26,.14); color:var(--primary); }
+  .status-regularise{ background:rgba(47,214,127,.14); color:var(--success); }
+  .empty-state{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; padding:60px 20px; color:var(--text-3); }
+  .empty-state .ic-circle{ width:60px; height:60px; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--text-3); }
+
+  /* Detail */
+  .detail-header{ display:flex; align-items:center; gap:15px; padding:20px; background:var(--surface); border:1px solid var(--border); border-radius:19px; margin-bottom:20px; }
+  .detail-header .avatar-ring{ width:54px; height:54px; }
+  .info-row{ display:flex; margin-bottom:13px; gap:10px; }
+  .info-label{ width:150px; flex-shrink:0; color:var(--text-3); font-size:13px; }
+  .info-value{ font-weight:700; font-size:13.5px; }
+  .info-box{ display:flex; gap:10px; padding:14px; background:var(--surface-2); border-radius:14px; font-size:11.5px; color:var(--text-2); margin-top:20px; line-height:1.55; }
+  .info-box svg{ flex-shrink:0; color:var(--primary); }
+
+  /* Admin */
+  .admin-bar{ background:linear-gradient(90deg, rgba(230,72,90,.14), transparent); border-bottom:1px solid var(--border); }
+  .admin-tag{ font-size:10px; font-weight:800; letter-spacing:1.5px; color:var(--danger); text-transform:uppercase; }
+  .admin-row{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:15px; margin-bottom:11px; }
+  .admin-row-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .admin-actions{ display:flex; gap:8px; }
+  .admin-icbtn{ width:34px; height:34px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); transition:transform .15s ease, color .15s ease; }
+  .admin-icbtn:hover{ color:var(--primary); }
+  .admin-icbtn.del:hover{ color:var(--danger); }
+  .admin-icbtn:active{ transform:scale(.88); }
+  select.status-select{ padding:9px 11px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:12.5px; font-family:inherit; }
+
+  /* Modal */
+  .modal-overlay{ position:absolute; inset:0; background:rgba(5,5,6,.72); backdrop-filter:blur(2px); display:none; align-items:center;
+    justify-content:center; padding:24px; z-index:60; animation:fadeIn .2s ease; }
+  .modal-overlay.active{ display:flex; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  .modal-box{ width:100%; max-width:320px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px;
+    animation:modalPop .3s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes modalPop{ from{opacity:0; transform:scale(.85) translateY(10px);} to{opacity:1; transform:scale(1) translateY(0);} }
+  .modal-box h3{ margin-bottom:10px; font-size:17px; }
+  .modal-box p{ margin-bottom:18px; }
+  .modal-icon{ width:50px; height:50px; border-radius:15px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--primary); margin-bottom:16px; }
+
+
+  /* ---------- Type d'incident, jauge de gravité, doublons, réputation ---------- */
+  select.form-select{ width:100%; padding:14px 15px; border-radius:14px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text); font-family:inherit; font-size:14.5px; outline:none; appearance:none; -webkit-appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+    background-position:calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+  select.form-select:focus{ border-color:var(--primary); background-color:var(--surface-3); }
+  input[readonly]{ opacity:.7; cursor:not-allowed; }
+  .gauge{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .gseg{ background:none; border:0; padding:6px 0 0; cursor:pointer; font-family:inherit; text-align:center; }
+  .gseg i{ display:block; height:14px; border-radius:7px; background:var(--surface-3); transition:background .2s ease, box-shadow .2s ease, transform .15s ease; }
+  .gseg:active i{ transform:scaleY(.8); }
+  .gseg.on i{ background:var(--gc); box-shadow:0 0 12px -3px var(--gc); }
+  .gseg span{ display:block; margin-top:7px; font-size:10.5px; font-weight:800; color:var(--text-3); letter-spacing:.2px; transition:color .2s ease; }
+  .gseg.cur span{ color:var(--gc); }
+  .gauge-caption{ margin-top:9px; font-size:12px; color:var(--text-3); line-height:1.45; min-height:17px; }
+  .grav-pill{ display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:20px; font-size:12px; font-weight:800;
+    margin-top:4px; color:var(--gc); background:var(--surface-2); border:1px solid var(--gc); }
+  @supports (background:color-mix(in srgb, red 10%, transparent)){
+    .grav-pill{ background:color-mix(in srgb, var(--gc) 16%, transparent); border-color:color-mix(in srgb, var(--gc) 55%, transparent); }
+  }
+  .grav-pill .grav-ico{ font-size:1.15em; line-height:1; font-style:normal; }
+  .dup-badge{ display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:800;
+    margin-top:4px; background:rgba(255,122,26,.14); color:var(--primary); }
+  .dup-badge.multi{ background:rgba(230,72,90,.16); color:var(--danger); }
+  .pill-row{ display:flex; flex-wrap:wrap; gap:6px; }
+  /* Encadré du détail : pastilles plus grosses pour être lues d'un coup d'oeil */
+  .detail-header .grav-pill, .detail-header .dup-badge{ font-size:14px; padding:8px 15px; gap:8px; margin-top:6px; }
+  .detail-header .dup-badge svg{ width:16px; height:16px; }
+  .confirm-countdown{ font-size:12px; color:var(--text-3); margin:12px 0 0; min-height:16px; }
+  .confirm-actions{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .dup-hint{ display:none; gap:10px; padding:13px 14px; margin:2px 0 14px; border-radius:14px; background:rgba(255,122,26,.09);
+    border:1px solid rgba(255,122,26,.35); font-size:12.5px; line-height:1.5; color:var(--text-2); }
+  .dup-hint.show{ display:flex; }
+  .dup-hint svg{ color:var(--primary); flex-shrink:0; margin-top:1px; }
+  .dup-hint b{ color:var(--text); }
+  .rep-card{ background:var(--surface); border:1px solid var(--border); border-radius:17px; padding:15px; margin-bottom:6px; }
+  .rep-top{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .rep-ic{ width:38px; height:38px; border-radius:12px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rep-title{ font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--text-3); }
+  .rep-tier{ font-size:15px; font-weight:800; margin-top:1px; }
+  .rep-score{ font-size:24px; font-weight:900; }
+  .rep-score small{ font-size:12px; font-weight:700; color:var(--text-3); margin-left:1px; }
+  .rep-bar{ height:7px; border-radius:6px; background:var(--surface-3); overflow:hidden; margin-bottom:11px; }
+  .rep-bar i{ display:block; height:100%; border-radius:6px; transition:width .5s ease; }
+  .rep-stats{ font-size:12px; color:var(--text-2); line-height:1.6; }
+  .rep-sanction{ margin-top:10px; padding:10px 12px; border-radius:11px; font-size:12px; line-height:1.5; font-weight:600; background:rgba(230,72,90,.12); color:var(--danger); }
+  .rep-sanction.warn{ background:rgba(244,183,64,.12); color:var(--warn); }
+  .rules-box{ font-size:11.5px; color:var(--text-3); line-height:1.55; margin:8px 0 4px; }
+
+  .dup-badge.clickable{ cursor:pointer; transition:transform .15s ease; }
+  .dup-badge.clickable:active{ transform:scale(.94); }
+  .dup-badge.clickable svg{ opacity:.8; }
+
+
+  /* =====================================================================
+     RESPONSIVE — téléphones, tablettes, ordinateurs, paysage
+     ===================================================================== */
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  body{ min-height:100vh; min-height:100dvh; }
+  .app{ max-height:94vh; max-height:94dvh; }
+  img, video{ max-width:100%; }
+  .modal-box{ max-height:90%; overflow-y:auto; }
+  .detail-header h2, .mini-title{ overflow-wrap:anywhere; }
+  .field-error input, .field-error select, .field-error textarea{ border-color:var(--danger) !important; box-shadow:0 0 0 3px rgba(230,72,90,.18); }
+  .field-error > label{ color:var(--danger); }
+
+  /* Tablettes */
+  @media (min-width:768px){
+    .app{ max-width:560px; height:min(900px, 94vh); height:min(900px, 94dvh); }
+    .tabpane{ padding:28px 32px; }
+    .modal-box{ max-width:380px; }
+  }
+  /* Grands écrans */
+  @media (min-width:1100px){
+    .app{ max-width:620px; }
+  }
+
+  /* Téléphones : l'application occupe tout l'écran (plus de cadre arrondi) */
+  @media (max-width:480px){
+    body{ padding:0; }
+    .app{ max-width:none; height:100vh; height:100dvh; max-height:none; border-radius:0; border:0; box-shadow:none; }
+    .view:not(#view-app){ padding-top:env(safe-area-inset-top,0px); }
+    #view-app .app-body{ padding-top:env(safe-area-inset-top,0px); }
+    .toast{ max-width:92%; }
+    /* 16 px minimum : évite le zoom automatique d'iOS quand on touche un champ */
+    input[type=text], input[type=date], input[type=password], input[type=email], input[type=tel], textarea, select.form-select{ font-size:16px !important; }
+  }
+  /* Petits téléphones */
+  @media (max-width:360px){
+    .field-row2{ grid-template-columns:1fr; gap:0; }
+    .tabpane{ padding:18px 14px; }
+    .detail-header{ flex-wrap:wrap; padding:16px; }
+    .detail-header .grav-pill, .detail-header .dup-badge{ font-size:13px; padding:7px 12px; }
+    .gseg span{ font-size:9.5px; }
+    .modal-overlay{ padding:14px; }
+    .modal-box{ padding:20px; }
+  }
+  /* Téléphone en paysage : écran bas, on libère toute la hauteur */
+  @media (max-height:520px){
+    body{ padding:0; }
+    .app{ max-width:none; height:100vh; height:100dvh; max-height:none; border-radius:0; border:0; }
+    .tabbar{ padding-top:4px; padding-bottom:calc(4px + env(safe-area-inset-bottom,0px)); }
+    .modal-box{ max-height:94%; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *, *::before, *::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+  }
+
+  ::-webkit-scrollbar{ width:0; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="noise"></div>
+
+  <!-- Bouton admin, toujours visible en haut à droite -->
+  <div class="icon-btn ghost-admin" onclick="openAdminModal()" aria-label="Accès admin"></div>
+  <!-- Bouton Accueil flottant, toujours visible, quelle que soit la page -->
+  <div class="toast" id="toast"></div>
+  <div class="fab-home" id="fab-home" onclick="goHome()" aria-label="Retour à l'accueil"></div>
+
+  <!-- ============ LANDING ============ -->
+  <div class="view active" id="view-landing">
+    <div class="brand-drop"><span class="lo">LOCA</span><span class="tr">'TRACK</span></div>
+    <div class="brand-sub">Le réseau des loueurs vigilants</div>
+
+    <div class="landing-actions">
+      <button class="btn" onclick="goTo('access')">Accéder à mon espace</button>
+      <div class="landing-line"><span></span><p>ou</p><span></span></div>
+      <button class="btn secondary" onclick="goTo('subscription')">S'abonner</button>
+    </div>
+  </div>
+
+  <!-- ============ ACCESS CODE ============ -->
+  <div class="view center-view" id="view-access">
+    <div class="icon-btn" onclick="goTo('landing')" style="position:absolute; top:22px; left:22px;"></div>
+    <div class="icon-hero"></div>
+    <h1>Code adhérent</h1>
+    <p style="margin:8px 0 24px;">Saisissez le code fourni à votre agence lors de votre adhésion.</p>
+    <div class="field">
+      <label>Code d'accès</label>
+      <input type="text" id="access-code" placeholder="LOC-XXXXXXXX" autocomplete="off">
+    </div>
+    <div class="error-text" id="access-error"></div>
+    <button class="btn" onclick="submitAccessCode()" style="margin-top:6px;">Continuer</button>
+  </div>
+
+  <!-- ============ SUBSCRIPTION ============ -->
+  <div class="view" id="view-subscription">
+    <div class="top-nav">
+      <div class="icon-btn" onclick="goTo('landing')"></div>
+      <div class="top-title">Abonnement</div>
+    </div>
+    <div style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
+      <h1>Rejoignez le réseau</h1>
+      <p style="margin:10px 0 24px;">Signalez et consultez les locataires à risque avec les autres agences adhérentes.</p>
+      <div class="feature"><div class="ic-wrap"></div><div>Signaler un locataire problématique</div></div>
+      <div class="feature"><div class="ic-wrap"></div><div>Rechercher un profil avant une location</div></div>
+      <div class="feature"><div class="ic-wrap"></div><div>Base mutualisée entre agences adhérentes</div></div>
+      <div style="margin-top:26px;">
+        <div class="plan selected" data-plan="0" onclick="selectPlan(0)">
+          <div class="radio"></div>
+          <div style="flex:1;">
+            <div class="plan-name">Mensuel</div>
+            <div class="plan-price">29,90€ / mois</div>
+          </div>
+          <div class="plan-yearly-equiv">soit 358,80€&nbsp;/&nbsp;an</div>
+        </div>
+        <div class="plan" data-plan="1" onclick="selectPlan(1)">
+          <div class="radio"></div>
+          <div style="flex:1;">
+            <div class="plan-name">Annuel</div>
+            <div class="plan-price">239,88€ / an</div>
+            <div class="plan-sub">soit 19,99€ / mois</div>
+          </div>
+          <div class="badge">-33%</div>
+        </div>
+      </div>
+
+      <div class="section-label">Paiement sécurisé</div>
+      <button class="btn" onclick="startStripeCheckout()" id="stripe-pay-btn">Payer <span id="stripe-pay-amount">29,90€</span> avec Stripe</button>
+      <div class="hint" style="text-align:center;">Paiement sécurisé par Stripe. Vous serez redirigé vers la page de paiement.</div>
+    </div>
+  </div>
+
+  <!-- ============ CODE ADHÉRENT GÉNÉRÉ ============ -->
+  <div class="view center-view" id="view-code">
+    <div class="icon-hero"></div>
+    <h1>Votre code adhérent</h1>
+    <p style="margin:8px 0 24px;">Conservez précieusement ce code : il vous permettra de vous reconnecter à tout moment à votre espace.</p>
+    <div class="field">
+      <label>Code d'accès</label>
+      <input type="text" id="generated-code-display" readonly style="text-align:center; font-weight:800; letter-spacing:2px; font-size:18px;">
+    </div>
+    <button class="btn" onclick="openProfileView()" style="margin-top:8px;">Continuer — créer mon profil</button>
+  </div>
+
+  <!-- ============ PROFIL DE L'AGENCE ============ -->
+  <div class="view" id="view-profile">
+    <div class="top-nav">
+      <div class="icon-btn" onclick="goHome()"></div>
+      <div class="top-title">Profil de l'agence</div>
+    </div>
+    <div style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
+      <div class="field"><label>Nom de l'agence</label><input type="text" id="p-agence" placeholder="Ex : Location Plus – Lyon"></div>
+      <div class="section-label" style="margin-top:6px;">Signalements de l'agence</div>
+      <div id="agency-history"></div>
+
+      <div class="section-label">Carte d'identité du gérant</div>
+      <div class="field-row2">
+        <div>
+          <label>Recto</label>
+          <input type="file" id="profile-id-recto-input" class="photo-input-hidden" accept="image/*" onchange="handleIdSelect(event,'profile','recto')">
+          <div class="id-slot" id="profile-id-recto-slot" onclick="document.getElementById('profile-id-recto-input').click()"></div>
+        </div>
+        <div>
+          <label>Verso</label>
+          <input type="file" id="profile-id-verso-input" class="photo-input-hidden" accept="image/*" onchange="handleIdSelect(event,'profile','verso')">
+          <div class="id-slot" id="profile-id-verso-slot" onclick="document.getElementById('profile-id-verso-input').click()"></div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:14px;"><label>Emplacement de l'agence</label><input type="text" id="p-emplacement" placeholder="Adresse complète"></div>
+      <div class="field"><label>Contact de l'agence</label><input type="text" id="p-contact" placeholder="Téléphone ou email"></div>
+
+      <button class="btn" onclick="saveProfile()" style="margin-top:8px;">Enregistrer mon profil</button>
+      <button class="btn secondary" onclick="logout()" style="margin-top:10px;">Se déconnecter</button>
+    </div>
+  </div>
+
+  <!-- ============ MAIN APP ============ -->
+  <div class="view" id="view-app">
+    <div class="app-body">
+
+      <!-- HOME -->
+      <div class="tabpane active" id="pane-home" data-pane="0">
+        <div class="home-header">
+          <div class="agency-chip clickable" onclick="openProfileView()">
+            <div class="avatar-ring" id="agency-initials">LP</div>
+            <div>
+              <div class="agency-name" id="agency-display-name">Location Plus – Lyon</div>
+              <div class="agency-sub">Espace adhérent · Modifier</div>
+            </div>
+          </div>
+          <div class="agency-chip-edit-hint" id="agency-edit-ic"></div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">Signalements réseau</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="stat-month">0</div>
+            <div class="stat-label">Ajoutés ce mois</div>
+          </div>
+        </div>
+
+        <div class="grid-actions">
+          <div class="action-tile" onclick="openReportForm()">
+            <div class="ic-wrap"></div>
+            <h2>Signaler</h2>
+            <p>Enregistrer un incident</p>
+          </div>
+          <div class="action-tile" onclick="switchTab(2)">
+            <div class="ic-wrap"></div>
+            <h2>Rechercher</h2>
+            <p>Vérifier un profil</p>
+          </div>
+        </div>
+
+        <div class="section-title">Derniers signalements du réseau</div>
+        <div id="recent-list"></div>
+      </div>
+
+      <!-- REPORT FORM -->
+      <div class="tabpane" id="pane-report" data-pane="1">
+        <div id="rep-report"></div>
+
+        <div class="section-label">Agence déclarante</div>
+        <div class="field"><label>Nom de l'agence</label><input type="text" id="f-agence" placeholder="Ex : Location Plus – Lyon"></div>
+
+        <div class="section-label">Identité du locataire</div>
+        <div class="field-row2">
+          <div class="field"><label>Nom</label><input type="text" id="f-nom" oninput="updateDupHint()"></div>
+          <div class="field"><label>Prénom</label><input type="text" id="f-prenom" oninput="updateDupHint()"></div>
+        </div>
+        <div class="field-row2">
+          <div class="field"><label>Date de naissance</label><input type="date" id="f-naissance" oninput="updateDupHint()" onchange="updateDupHint()"></div>
+          <div class="field"><label>Lieu de naissance</label><input type="text" id="f-lieu"></div>
+        </div>
+        <div class="field"><label>Numéro de permis de conduire</label><input type="text" id="f-permis-num" placeholder="Ex : 12AB34567" autocomplete="off" autocapitalize="characters" oninput="updateDupHint()"></div>
+        <div class="field"><label>Date d'obtention du permis</label><input type="date" id="f-permis"></div>
+        <div class="dup-hint" id="dup-hint"></div>
+
+        <div class="section-label">Pièce d'identité du locataire</div>
+        <div class="field-row2">
+          <div>
+            <label>Recto</label>
+            <input type="file" id="report-id-recto-input" class="photo-input-hidden" accept="image/*" onchange="handleIdSelect(event,'report','recto')">
+            <div class="id-slot" id="report-id-recto-slot" onclick="document.getElementById('report-id-recto-input').click()"></div>
+          </div>
+          <div>
+            <label>Verso</label>
+            <input type="file" id="report-id-verso-input" class="photo-input-hidden" accept="image/*" onchange="handleIdSelect(event,'report','verso')">
+            <div class="id-slot" id="report-id-verso-slot" onclick="document.getElementById('report-id-verso-input').click()"></div>
+          </div>
+        </div>
+        <div class="hint">Ajoutez le recto et le verso de la carte d'identité du locataire, si vous en disposez.</div>
+
+        <div class="section-label">Détails de l'incident</div>
+        <div class="field"><label>Type d'incident</label>
+          <select class="form-select" id="f-type" onchange="onTypeChange()"></select>
+        </div>
+        <div class="field"><label>Niveau de gravité</label>
+          <div class="gauge" id="gauge"></div>
+          <div class="gauge-caption" id="gauge-caption">Sélectionnez un niveau de gravité.</div>
+        </div>
+        <div class="field-row2">
+          <div class="field"><label>Date du sinistre</label><input type="date" id="f-sinistre"></div>
+          <div class="field"><label>Véhicule loué</label><input type="text" id="f-vehicule"></div>
+        </div>
+        <div class="field" id="f-prejudice-wrap"><label>Montant du préjudice à rembourser (€)</label>
+          <input type="text" id="f-prejudice" inputmode="decimal" placeholder="Ex : 850" autocomplete="off">
+          <div class="hint" style="margin:6px 0 0;">À renseigner uniquement si le locataire doit vous rembourser un préjudice (dégâts, impayé…). Laissez vide sinon.</div>
+        </div>
+        <div class="field"><label>Description des faits</label><textarea id="f-description"></textarea></div>
+
+        <div class="section-label">Photos du sinistre</div>
+        <input type="file" id="f-photos-input" class="photo-input-hidden" accept="image/*" multiple onchange="handlePhotoSelect(event)">
+        <div class="photo-grid" id="photo-grid">
+          <div class="photo-add-tile" onclick="document.getElementById('f-photos-input').click()"></div>
+        </div>
+        <div class="hint">Ajoutez des photos comme preuve (rayures, brûlures, taches...). Formats JPG/PNG.</div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="f-certify">
+          <span>Je certifie l'exactitude de ces informations et j'accepte que la personne concernée soit notifiée de ce signalement et puisse le contester. Je reconnais qu'un signalement mensonger m'expose à des sanctions : rejet du signalement, restriction puis suspension de l'accès au signalement, et poursuites éventuelles.</span>
+        </div>
+
+        <button class="btn" onclick="submitReport()" style="margin-bottom:12px;">Enregistrer le signalement</button>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="tabpane" id="pane-search" data-pane="2">
+        <div class="search-bar">
+          <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Nom, prénom ou n° de permis" id="f-search" oninput="runSearch()">
+        </div>
+        <div class="hint">La recherche interroge l'ensemble des signalements du réseau. Elle tolère les accents, les fautes de frappe, l'inversion nom/prénom et les noms composés.</div>
+        <div id="search-results"></div>
+      </div>
+
+    </div>
+
+    <div class="tabbar">
+      <div class="tab active" data-tab="0" onclick="switchTab(0)"></div>
+      <div class="tab" data-tab="1" onclick="switchTab(1)"></div>
+      <div class="tab" data-tab="2" onclick="switchTab(2)"></div>
+    </div>
+  </div>
+
+  <!-- ============ DETAIL ============ -->
+  <div class="view" id="view-detail">
+    <div class="top-nav">
+      <div class="icon-btn" onclick="goTo('app')"></div>
+      <div class="top-title">Détail du signalement</div>
+    </div>
+    <div id="detail-content" style="padding:8px 22px 22px; overflow-y:auto; flex:1;"></div>
+  </div>
+
+  <!-- ============ SIGNALEMENTS LIÉS À UNE PERSONNE ============ -->
+  <div class="view" id="view-linked">
+    <div class="top-nav">
+      <div class="icon-btn" onclick="closeLinked()"></div>
+      <div class="top-title">Signalements liés</div>
+    </div>
+    <div id="linked-content" style="padding:8px 22px 22px; overflow-y:auto; flex:1;"></div>
+  </div>
+
+  <!-- ============ ADMIN PANEL ============ -->
+  <div class="view" id="view-admin">
+    <div class="top-nav admin-bar">
+      <div class="icon-btn" onclick="goTo('landing')"></div>
+      <div>
+        <div class="admin-tag">Espace admin</div>
+        <div class="top-title">Base de données</div>
+      </div>
+    </div>
+    <div style="padding:16px 22px 22px; overflow-y:auto; flex:1;" id="admin-list"></div>
+  </div>
+
+  <!-- ============ MODALS ============ -->
+  <div class="modal-overlay" id="modal-confirm">
+    <div class="modal-box">
+      <div class="modal-icon"></div>
+      <h3>Signalement enregistré</h3>
+      <p id="confirm-msg">Le signalement est désormais visible par les agences adhérentes du réseau.</p>
+      <div class="confirm-actions">
+        <button class="btn" onclick="confirmGoHome()">Retour à l'accueil</button>
+      </div>
+      <p class="confirm-countdown" id="confirm-countdown"></p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-admin-login">
+    <div class="modal-box">
+      <div class="modal-icon"></div>
+      <h3>Accès administrateur</h3>
+      <p>Cet espace est réservé. Saisissez le code d'accès.</p>
+      <input type="password" id="admin-code-input" placeholder="Code d'accès" style="margin-bottom:8px;">
+      <div class="error-text" id="admin-error"></div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="btn secondary" onclick="closeModal('modal-admin-login')">Annuler</button>
+        <button class="btn" onclick="checkAdminCode()">Entrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-edit">
+    <div class="modal-box" style="max-width:340px; max-height:80vh; overflow-y:auto;">
+      <h3 style="margin-bottom:16px;">Modifier le signalement</h3>
+      <div class="field"><label>Nom</label><input type="text" id="e-nom"></div>
+      <div class="field"><label>Prénom</label><input type="text" id="e-prenom"></div>
+      <div class="field"><label>Type d'incident</label><select class="form-select" id="e-type"></select></div>
+      <div class="field"><label>Gravité</label><select class="form-select" id="e-gravite"></select></div>
+      <div class="field"><label>Véhicule</label><input type="text" id="e-vehicule"></div>
+      <div class="field"><label>Montant du préjudice (€)</label><input type="text" id="e-prejudice" inputmode="decimal" placeholder="Vide si aucun"></div>
+      <div class="field"><label>Description</label><textarea id="e-description"></textarea></div>
+      <div class="field">
+        <label>Statut</label>
+        <select class="status-select" id="e-statut" style="width:100%;">
+          <option value="confirme">Confirmé</option>
+          <option value="attente">En attente de vérification</option>
+          <option value="conteste">Contesté</option>
+          <option value="rejete">Rejeté (signalement mensonger)</option>
+        </select>
+        <div class="rules-box">Rejeter un signalement le marque comme mensonger : la limite quotidienne de l'agence auteure est réduite (3 rejets = suspension).</div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn secondary" onclick="closeModal('modal-edit')">Annuler</button>
+        <button class="btn" onclick="saveEdit()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-regularise">
+    <div class="modal-box">
+      <div class="modal-icon"></div>
+      <h3>Marquer comme régularisé</h3>
+      <p>Confirmez que la situation est réglée (impayé payé, véhicule restitué). Le signalement reste visible avec le statut « Régularisé ».</p>
+      <div class="field"><label>Date de régularisation</label><input type="date" id="reg-date"></div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn secondary" onclick="closeModal('modal-regularise')">Annuler</button>
+        <button class="btn" onclick="confirmRegularise()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-delete-confirm">
+    <div class="modal-box">
+      <div class="modal-icon" style="color:var(--danger);"></div>
+      <h3>Supprimer ce signalement ?</h3>
+      <p>Cette action est irréversible.</p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn secondary" onclick="closeModal('modal-delete-confirm')">Annuler</button>
+        <button class="btn danger" onclick="confirmDelete()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-lightbox" onclick="closeLightboxBg(event)">
+    <div class="icon-btn" id="lightbox-close" style="position:absolute; top:20px; right:20px; z-index:2;" onclick="closeModal('modal-lightbox')"></div>
+    <img id="lightbox-img" src="" style="max-width:100%; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6);">
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   ICÔNES — SVG inline, aucun emoji
+   ========================================================================= */
+const ICONS = {
+  shield:'<path d="M12 3l7 3v6c0 5-3.2 8.5-7 9-3.8-.5-7-4-7-9V6l7-3z"/>',
+  flag:'<path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  search:'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  camera:'<path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3.3"/>',
+  chevronLeft:'<path d="M15 5l-7 7 7 7"/>',
+  checkCircle:'<circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+  alertTriangle:'<path d="M12 3 2 21h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17.01"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 20.5c0-4.1 3.8-6.5 8-6.5s8 2.4 8 6.5"/>',
+  info:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  x:'<line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/>',
+  creditCard:'<rect x="3" y="6" width="18" height="13" rx="2.5"/><line x1="3" y1="10.5" x2="21" y2="10.5"/>',
+  key:'<circle cx="7.5" cy="14.5" r="3.5"/><path d="M9.8 12.2 18 4"/><path d="M14 8l3 3"/>',
+  edit:'<path d="M4 20h4l10.3-10.3a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+  trash:'<path d="M4 7h16"/><path d="M9 7V4.6A1.6 1.6 0 0 1 10.6 3h2.8A1.6 1.6 0 0 1 15 4.6V7"/><path d="M6.5 7l1 12.2A2 2 0 0 0 9.5 21h5a2 2 0 0 0 2-1.8L17.5 7"/>',
+  briefcase:'<rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/>',
+  home:'<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><polygon points="15.5 8.5 13.2 13.2 8.5 15.5 10.8 10.8 15.5 8.5"/>',
+  users:'<circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.6 2.9-5.6 6.5-5.6s6.5 2 6.5 5.6"/><path d="M16 4.8a3.4 3.4 0 0 1 0 6.4"/><path d="M18 14.6c2.1.6 3.5 2.3 3.5 5.4"/>',
+  arrowRight:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>'
+};
+function ic(name, size){
+  size = size || 20;
+  return '<svg class="ic" viewBox="0 0 24 24" style="width:'+size+'px;height:'+size+'px;">'+ICONS[name]+'</svg>';
+}
+function fillIcons(){
+  document.querySelectorAll('[data-ic]').forEach(el=>{
+    el.innerHTML = ic(el.getAttribute('data-ic'), el.getAttribute('data-ic-size')||20);
+  });
+}
+
+/* =========================================================================
+   BASE DE DONNÉES (Supabase) — chaque modification est enregistrée durablement :
+   agences, codes d'accès, paiements, profils, signalements, cartes d'identité
+   et photos de sinistre. Les tables ne sont pas lisibles directement : tout
+   passe par des fonctions serveur qui vérifient le code d'accès de l'agence.
+   ========================================================================= */
+const SUPABASE_URL = 'https://mztwqmkzmjvygnxdapxw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16dHdxbWt6bWp2eWdueGRhcHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODgxMjYsImV4cCI6MjEwNjE2NDEyNn0.vmGMxEByO68yM7mfbXqFTWlxGYIuWI_AzZbbY7V_CGk';
+
+async function rpc(fn, args){
+  let res;
+  try{
+    res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify(args || {})
+    });
+  } catch(e){ throw new Error('network'); }
+  if(!res.ok) throw new Error('http ' + res.status);
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 4200);
+}
+function dbError(e){
+  showToast(e && e.message === 'network'
+    ? "Base de données injoignable. Vérifiez votre connexion (l'aperçu Claude bloque l'accès réseau : ouvrez le fichier HTML dans votre navigateur)."
+    : "Une erreur est survenue lors de l'enregistrement. Réessayez.");
+}
+
+/* Le contenu saisi par une agence est affiché aux autres agences : il doit
+   toujours être échappé pour empêcher toute injection de code. */
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function safeImg(src){
+  return (typeof src === 'string' && src.startsWith('data:image/') && !/["'<>\s]/.test(src)) ? src : '';
+}
+
+/* Redimensionne / compresse une image avant enregistrement (base plus légère,
+   envoi plus rapide) tout en gardant une carte d'identité lisible. */
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e=>{
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = ()=>{
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Session : l'agence reste connectée après un rechargement de la page */
+const SESSION_KEY = 'locatrack_access_code';
+function saveSession(code){ try{ localStorage.setItem(SESSION_KEY, code); }catch(e){} }
+function loadSession(){ try{ return localStorage.getItem(SESSION_KEY); }catch(e){ return null; } }
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+
+let reports = [];
+let reportsLoaded = false;
+let formPhotos = [];
+let selectedPlanIndex = 0;
+let editingId = null;
+let deletingId = null;
+let submittingReport = false;
+let clusters = {};
+let formGravity = 0;
+let gravityTouched = false;
+
+let currentAccessCode = null;
+let currentProfile = null;
+let adminCode = null;
+let adminReports = [];
+let adminAgencies = [];
+
+/* Stockage temporaire des images de carte d'identité en cours de dépôt */
+let idData = { report:{recto:null, verso:null}, profile:{recto:null, verso:null} };
+
+async function loadReports(){
+  if(!currentAccessCode) return;
+  try{
+    const list = await rpc('list_reports', { p_code: currentAccessCode });
+    reports = (Array.isArray(list) ? list : []).map(normalizeReport);
+    clusters = buildClusters(reports);
+    reportsLoaded = true;
+    renderRepCards();
+  } catch(e){ dbError(e); }
+}
+
+/* =========================================================================
+   NAVIGATION
+   ========================================================================= */
+let currentView = 'landing';
+function goTo(name){
+  currentView = name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('fab-home').classList.toggle('above-tabbar', name === 'app');
+  if(name === 'app'){ renderHome(); }
+  if(name === 'admin'){ renderAdmin(); }
+  if(name === 'subscription'){ updateStripeButtonLabel(); }
+}
+
+let currentTab = 0;
+function switchTab(index, dir){
+  const panes = document.querySelectorAll('.tabpane');
+  const tabs = document.querySelectorAll('.tab');
+  if(!dir) dir = index > currentTab ? 'right' : 'left';
+  panes.forEach(p=>{
+    p.classList.remove('active','from-right','from-left');
+  });
+  const target = document.querySelector('.tabpane[data-pane="'+index+'"]');
+  target.classList.add('active', dir === 'right' ? 'from-right' : 'from-left');
+  tabs.forEach(t=>t.classList.toggle('active', t.getAttribute('data-tab') == index));
+  currentTab = index;
+  if(index === 2){ document.getElementById('f-search').focus(); }
+}
+
+/* swipe entre onglets */
+(function(){
+  let startX=0, startY=0, tracking=false;
+  const body = document.querySelector('.app-body');
+  body.addEventListener('touchstart', e=>{
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY; tracking = true;
+  }, {passive:true});
+  body.addEventListener('touchend', e=>{
+    if(!tracking) return; tracking = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)){
+      if(dx < 0 && currentTab < 2) switchTab(currentTab+1, 'right');
+      if(dx > 0 && currentTab > 0) switchTab(currentTab-1, 'left');
+    }
+  }, {passive:true});
+})();
+
+/* ripple sur tous les .btn */
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.btn');
+  if(!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('span');
+  const size = Math.max(rect.width, rect.height) * 1.2;
+  r.className = 'ripple';
+  r.style.width = r.style.height = size+'px';
+  r.style.left = (e.clientX - rect.left - size/2)+'px';
+  r.style.top = (e.clientY - rect.top - size/2)+'px';
+  btn.appendChild(r);
+  setTimeout(()=>r.remove(), 550);
+});
+
+/* =========================================================================
+   ACCÈS ADHÉRENT
+   ========================================================================= */
+async function enterApp(code, profile){
+  currentAccessCode = code;
+  currentProfile = profile;
+  saveSession(code);
+  await loadReports();
+  goTo('app');
+}
+async function submitAccessCode(){
+  const val = document.getElementById('access-code').value.trim().toUpperCase();
+  const errorEl = document.getElementById('access-error');
+  errorEl.textContent = '';
+  if(!val){ errorEl.textContent = 'Saisissez votre code.'; return; }
+  try{
+    const profile = await rpc('login_agency', { p_code: val });
+    if(profile){
+      await enterApp(val, profile);
+    } else {
+      errorEl.textContent = "Code invalide. Vérifiez le code fourni par votre agence.";
+      const box = document.getElementById('view-access');
+      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    }
+  } catch(e){ dbError(e); }
+}
+function logout(){
+  clearSession();
+  currentAccessCode = null; currentProfile = null;
+  reports = []; clusters = {}; reportsLoaded = false;
+  goTo('landing');
+}
+async function restoreSession(){
+  const code = loadSession();
+  if(!code) return;
+  try{
+    const profile = await rpc('login_agency', { p_code: code });
+    if(profile){ await enterApp(code, profile); } else { clearSession(); }
+  } catch(e){ /* hors ligne : on reste sur l'accueil */ }
+}
+
+const PLAN_PRICES = {
+  0: { amount:'29.90',  plan:'mensuel', label:"Abonnement mensuel Loca'Track" },
+  1: { amount:'239.88', plan:'annuel',  label:"Abonnement annuel Loca'Track" }
+};
+
+function selectPlan(i){
+  selectedPlanIndex = i;
+  document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));
+  document.querySelector('.plan[data-plan="'+i+'"]').classList.add('selected');
+  updateStripeButtonLabel();
+}
+function updateStripeButtonLabel(){
+  const plan = PLAN_PRICES[selectedPlanIndex];
+  const amountEl = document.getElementById('stripe-pay-amount');
+  if(amountEl && plan) amountEl.textContent = plan.amount.replace('.',',')+'€';
+}
+
+/* =========================================================================
+   PAIEMENT STRIPE — liens de paiement Stripe (mode test).
+   Le bouton ouvre la page de paiement Stripe. Après paiement, Stripe
+   renvoie vers ce fichier avec ?paye=mensuel ou ?paye=annuel, et le compte
+   agence est alors créé. Pour la production : remplacez ces 2 liens par
+   vos liens « live » créés dans le tableau de bord Stripe.
+   ========================================================================= */
+const STRIPE_LINKS = {
+  mensuel: 'https://buy.stripe.com/test_8x2bJ22do0XLdr5dhdcjS00',
+  annuel:  'https://buy.stripe.com/test_00w8wQcS26i5dr55OLcjS01'
+};
+
+function startStripeCheckout(){
+  const url = STRIPE_LINKS[PLAN_PRICES[selectedPlanIndex].plan];
+  /* Si la page est affichée dans un aperçu (cadre), on ouvre Stripe dans un nouvel onglet */
+  if(window.top !== window.self){
+    const w = window.open(url, '_blank');
+    if(!w) location.href = url;
+    return;
+  }
+  location.href = url;
+}
+
+/* Retour de Stripe : création du compte agence */
+async function handleStripeReturn(){
+  const plan = new URLSearchParams(location.search).get('paye');
+  if(plan !== 'mensuel' && plan !== 'annuel') return false;
+  history.replaceState(null, '', location.pathname);
+  selectedPlanIndex = plan === 'annuel' ? 1 : 0;
+  await completeSubscription('stripe', null, null);
+  return true;
+}
+
+/* Après paiement, le compte agence et son code d'accès sont créés et
+   enregistrés en base (code aléatoire de 8 caractères, généré côté serveur). */
+async function completeSubscription(method, reference, last4){
+  try{
+    const code = await rpc('register_agency', {
+      p_plan: selectedPlanIndex === 1 ? 'annuel' : 'mensuel',
+      p_method: method, p_reference: reference || null, p_card_last4: last4 || null
+    });
+    currentAccessCode = code;
+    currentProfile = { agence:'', numero:'', emplacement:'', contact:'', idRecto:null, idVerso:null };
+    reports = []; reportsLoaded = false;
+    saveSession(code);
+    document.getElementById('generated-code-display').value = code;
+    goTo('code');
+    return true;
+  } catch(e){ dbError(e); return false; }
+}
+
+/* =========================================================================
+   PROFIL DE L'AGENCE — création à la souscription, modifiable à tout moment
+   depuis l'accueil de l'espace adhérent.
+   ========================================================================= */
+function openProfileView(){
+  if(!currentAccessCode) return;
+  const p = currentProfile || {};
+  document.getElementById('p-agence').value = p.agence || '';
+  document.getElementById('p-emplacement').value = p.emplacement || '';
+  document.getElementById('p-contact').value = p.contact || '';
+  idData.profile.recto = safeImg(p.idRecto) || null;
+  idData.profile.verso = safeImg(p.idVerso) || null;
+  renderIdSlot('profile','recto');
+  renderIdSlot('profile','verso');
+  renderRepCards();
+  goTo('profile');
+}
+async function saveProfile(){
+  if(!currentAccessCode) return;
+  const next = {
+    agence: document.getElementById('p-agence').value.trim(),
+    numero: (currentProfile && currentProfile.numero) || '',
+    emplacement: document.getElementById('p-emplacement').value.trim(),
+    contact: document.getElementById('p-contact').value.trim(),
+    idRecto: idData.profile.recto, idVerso: idData.profile.verso
+  };
+  try{
+    const ok = await rpc('update_agency', {
+      p_code: currentAccessCode, p_agence: next.agence, p_numero: next.numero,
+      p_emplacement: next.emplacement, p_contact: next.contact,
+      p_id_recto: next.idRecto, p_id_verso: next.idVerso
+    });
+    if(!ok){ showToast("Code d'accès invalide. Reconnectez-vous."); return; }
+    currentProfile = next;
+    saveSession(currentAccessCode);
+    if(!reportsLoaded) await loadReports();
+    goTo('app');
+    showToast('Profil enregistré');
+  } catch(e){ dbError(e); }
+}
+
+/* =========================================================================
+   BOUTON ACCUEIL — toujours visible, quelle que soit la page affichée
+   ========================================================================= */
+async function goHome(){
+  if(currentAccessCode){
+    if(!reportsLoaded) await loadReports();
+    goTo('app');
+    switchTab(0, 'left');
+  } else {
+    goTo('landing');
+  }
+}
+
+/* =========================================================================
+   CARTES D'IDENTITÉ — dépôt recto/verso (locataire signalé ou gérant)
+   ========================================================================= */
+async function handleIdSelect(evt, context, side){
+  const file = evt.target.files && evt.target.files[0];
+  evt.target.value = '';
+  if(!file) return;
+  try{
+    idData[context][side] = await compressImage(file, 1400, 0.8);
+    renderIdSlot(context, side);
+  } catch(e){ showToast("Image illisible. Essayez un autre fichier."); }
+}
+function removeIdSlot(context, side){
+  idData[context][side] = null;
+  renderIdSlot(context, side);
+}
+function renderIdSlot(context, side){
+  const slot = document.getElementById(context+'-id-'+side+'-slot');
+  if(!slot) return;
+  const src = idData[context][side];
+  if(src){
+    slot.classList.add('filled');
+    slot.innerHTML = '<img src="'+src+'" onclick="event.stopPropagation(); openLightbox(this.src)">'
+      + '<div class="photo-remove" onclick="event.stopPropagation(); removeIdSlot(\''+context+'\',\''+side+'\')">'+ic('x',12)+'</div>';
+  } else {
+    slot.classList.remove('filled');
+    slot.innerHTML = ic('creditCard',22);
+  }
+}
+
+/* =========================================================================
+   ADMIN — le code admin est vérifié côté serveur (jamais présent dans ce fichier)
+   ========================================================================= */
+function openAdminModal(){
+  document.getElementById('admin-code-input').value = '';
+  document.getElementById('admin-error').textContent = '';
+  document.getElementById('modal-admin-login').classList.add('active');
+}
+async function checkAdminCode(){
+  const val = document.getElementById('admin-code-input').value.trim();
+  try{
+    const ok = await rpc('admin_check', { p_admin_code: val });
+    if(ok){
+      adminCode = val;
+      closeModal('modal-admin-login');
+      goTo('admin');
+    } else {
+      document.getElementById('admin-error').textContent = 'Code incorrect.';
+      const box = document.getElementById('modal-admin-login').querySelector('.modal-box');
+      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    }
+  } catch(e){ dbError(e); }
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+function openLightbox(src){
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('modal-lightbox').classList.add('active');
+}
+function closeLightboxBg(e){
+  if(e.target.id === 'modal-lightbox'){ closeModal('modal-lightbox'); }
+}
+
+/* =========================================================================
+   PHOTOS — vrai dépôt de fichiers (FileReader), aperçu réel
+   ========================================================================= */
+async function handlePhotoSelect(evt){
+  const files = Array.from(evt.target.files || []);
+  evt.target.value = '';
+  const remaining = 8 - formPhotos.length;
+  for(const file of files.slice(0, remaining)){
+    try{
+      formPhotos.push(await compressImage(file, 1280, 0.72));
+      renderPhotoGrid();
+    } catch(e){ showToast("Une photo n'a pas pu être lue."); }
+  }
+}
+function removePhoto(i){
+  formPhotos.splice(i,1);
+  renderPhotoGrid();
+}
+function renderPhotoGrid(){
+  const grid = document.getElementById('photo-grid');
+  grid.innerHTML = formPhotos.map((src,i)=>
+    '<div class="photo-thumb"><img src="'+src+'" onclick="openLightbox(this.src)"><div class="photo-remove" onclick="event.stopPropagation(); removePhoto('+i+')">'+ic('x',12)+'</div></div>'
+  ).join('') + '<div class="photo-add-tile" onclick="document.getElementById(\'f-photos-input\').click()">'+ic('camera',22)+'</div>';
+}
+
+/* =========================================================================
+   TYPES D'INCIDENT, GRAVITÉ, MÉTADONNÉES
+   Le type, la gravité et le n° de permis sont transmis à la base ET conservés
+   dans un marqueur invisible en tête de la description : ils restent ainsi
+   visibles par toutes les agences même si la table ne possède pas encore ces
+   colonnes. Le marqueur est retiré à l'affichage.
+   ========================================================================= */
+const INCIDENT_TYPES = [
+  {id:'impaye', label:'Impayé', g:2},
+  {id:'degradation', label:'Dégradation du véhicule', g:2},
+  {id:'non_restitution', label:'Non-restitution du véhicule', g:3},
+  {id:'vol', label:'Vol', g:4},
+  {id:'accident', label:'Accident non déclaré', g:3},
+  {id:'faux_documents', label:'Faux documents', g:4},
+  {id:'infraction', label:'Infraction grave', g:4},
+  {id:'autre', label:'Autre', g:1}
+];
+const GRAVITY = [
+  {l:1, label:'Faible',   color:'#2fd67f', desc:'Litige mineur, sans conséquence durable.'},
+  {l:2, label:'Modéré',   color:'#f5d33d', desc:'Préjudice réel mais limité.'},
+  {l:3, label:'Élevé',    color:'#ff7a1a', desc:'Préjudice important : vigilance recommandée.'},
+  {l:4, label:'Critique', color:'#e6485a', desc:'Faits très graves : vigilance maximale.'}
+];
+function typeLabel(id){ const t = INCIDENT_TYPES.find(x=>x.id===id); return t ? t.label : 'Non précisé'; }
+function gravMeta(l){ return GRAVITY.find(g=>g.l===Number(l)) || null; }
+function gravPill(l){
+  const g = gravMeta(l); if(!g) return '';
+  return '<span class="grav-pill" style="--gc:'+g.color+'"><i class="grav-ico">⚠️</i>Gravité : '+g.label+'</span>';
+}
+
+const META_RE = /^\[\[LT:([^\]]*)\]\]\n?/;
+function encodeDesc(text, meta){ return '[[LT:'+encodeURIComponent(JSON.stringify(meta))+']]\n'+(text||''); }
+function decodeDesc(raw){
+  raw = String(raw == null ? '' : raw);
+  const m = raw.match(META_RE);
+  if(!m) return { text:raw, meta:{} };
+  let meta = {};
+  try{ meta = JSON.parse(decodeURIComponent(m[1])) || {}; }catch(e){}
+  return { text:raw.slice(m[0].length), meta };
+}
+function normalizeReport(r){
+  const d = decodeDesc(r.description);
+  const m = d.meta || {};
+  r.description = d.text;
+  r.type = r.type || m.t || '';
+  r.gravite = parseInt(r.gravite || m.g, 10) || 0;
+  r.numeroPermis = r.numeroPermis || m.pn || '';
+  const pj = (m.pj === null || m.pj === undefined || m.pj === '') ? NaN : Number(m.pj);
+  r.prejudice = isFinite(pj) ? pj : null;
+  r.regularise = (typeof m.rg === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(m.rg)) ? m.rg : '';
+  r.agenceAdresse = r.agenceAdresse || '';
+  return r;
+}
+
+/* =========================================================================
+   CORRESPONDANCE FLOUE — accents, fautes de frappe, inversion nom/prénom,
+   noms composés (tirets, apostrophes, particules)
+   ========================================================================= */
+function normStr(s){
+  return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/œ/g,'oe').replace(/æ/g,'ae').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function normPermis(s){ return String(s == null ? '' : s).toUpperCase().replace(/[^A-Z0-9]/g,''); }
+const PARTICLES = new Set(['de','du','des','la','le','les','d','l','van','von','der','den','da','di','do','dos','el','al']);
+function nameTokens(r){
+  const all = (normStr(r.nom)+' '+normStr(r.prenom)).split(' ').filter(Boolean);
+  const core = all.filter(t=>!PARTICLES.has(t) && t.length > 1);
+  return core.length ? core : all;
+}
+function tkOf(r){ return r._tk || (r._tk = nameTokens(r)); }
+/* distance de Damerau-Levenshtein (les transpositions comptent pour 1 faute) */
+function lev(a, b){
+  if(a === b) return 0;
+  const al = a.length, bl = b.length;
+  if(!al) return bl; if(!bl) return al;
+  const d = [];
+  for(let i=0;i<=al;i++){ d[i] = [i]; }
+  for(let j=1;j<=bl;j++){ d[0][j] = j; }
+  for(let i=1;i<=al;i++){
+    for(let j=1;j<=bl;j++){
+      const c = a[i-1] === b[j-1] ? 0 : 1;
+      d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+c);
+      if(i>1 && j>1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2]+1);
+    }
+  }
+  return d[al][bl];
+}
+function tolFor(a, b){ const n = Math.min(a.length, b.length); return n <= 3 ? 0 : (n <= 6 ? 1 : 2); }
+function tokEq(a, b){ return a === b || lev(a, b) <= tolFor(a, b); }
+function namesMatch(a, b){
+  const ta = tkOf(a), tb = tkOf(b);
+  const short = ta.length <= tb.length ? ta : tb;
+  const long = ta.length <= tb.length ? tb : ta;
+  if(!short.length) return false;
+  if(short.length < 2) return long.length === 1 && tokEq(short[0], long[0]);
+  const used = new Set();
+  for(const t of short){
+    let found = -1;
+    for(let i=0;i<long.length;i++){ if(!used.has(i) && tokEq(t, long[i])){ found = i; break; } }
+    if(found < 0) return false;
+    used.add(found);
+  }
+  return true;
+}
+/* dates de naissance : identiques, ou jour/mois inversés (saisie US) */
+function sameDob(x, y){
+  if(!x || !y || x === y) return true;
+  const [y1,m1,d1] = x.split('-'), [y2,m2,d2] = y.split('-');
+  return y1 === y2 && m1 === d2 && d1 === m2;
+}
+function samePerson(a, b){
+  const pa = normPermis(a.numeroPermis), pb = normPermis(b.numeroPermis);
+  if(pa.length >= 5 && pa === pb) return true;
+  const dobOk = sameDob(a.naissance, b.naissance);
+  const permisClose = pa.length >= 8 && pb.length >= 8 && lev(pa, pb) <= 1;
+  if(!dobOk && !permisClose) return false;
+  if(!namesMatch(a, b)) return false;
+  return dobOk || permisClose;
+}
+
+/* =========================================================================
+   DÉTECTION DE DOUBLONS — regroupe les signalements d'une même personne
+   ========================================================================= */
+function agKey(name){ return normStr(name); }
+function buildClusters(list){
+  const map = {};
+  const active = list.filter(r=>r.statut !== 'rejete');
+  const parent = active.map((_,i)=>i);
+  const find = i=>{ while(parent[i] !== i){ parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+  for(let i=0;i<active.length;i++){
+    for(let j=i+1;j<active.length;j++){
+      if(find(i) !== find(j) && samePerson(active[i], active[j])) parent[find(i)] = find(j);
+    }
+  }
+  const groups = {};
+  active.forEach((r,i)=>{ const k = find(i); (groups[k] = groups[k] || []).push(r); });
+  Object.keys(groups).forEach(k=>{
+    const members = groups[k].slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+    const ags = new Set(members.map(r=>agKey(r.agence)).filter(Boolean));
+    const c = { id:'c'+k, reports:members, agencyCount:Math.max(1, ags.size), maxG:Math.max.apply(null, members.map(r=>r.gravite||0)) };
+    members.forEach(r=>{ map[r.id] = c; });
+  });
+  list.filter(r=>r.statut === 'rejete').forEach(r=>{
+    map[r.id] = { id:'r'+r.id, reports:[r], agencyCount:0, maxG:r.gravite||0 };
+  });
+  return map;
+}
+function plural(n, one, many){ return n + ' ' + (n > 1 ? many : one); }
+function dupBadge(c){
+  if(!c || !c.agencyCount) return '';
+  const n = c.reports.length;
+  return '<span class="dup-badge clickable'+(n >= 2 ? ' multi' : '')+'" onclick="event.stopPropagation(); openLinked(\''+esc(c.reports[0].id)+'\')">'
+    +ic('users',12)+'Signalé '+n+' fois'+ic('arrowRight',11)+'</span>';
+}
+function findMatches(cand){
+  return reports.filter(r=>r.statut !== 'rejete' && samePerson(cand, r));
+}
+function updateDupHint(){
+  const box = document.getElementById('dup-hint');
+  if(!box) return;
+  const cand = {
+    nom: document.getElementById('f-nom').value, prenom: document.getElementById('f-prenom').value,
+    naissance: document.getElementById('f-naissance').value, numeroPermis: document.getElementById('f-permis-num').value
+  };
+  const hasName = normStr(cand.nom) && normStr(cand.prenom);
+  const hasPermis = normPermis(cand.numeroPermis).length >= 5;
+  if(!hasName && !hasPermis){ box.classList.remove('show'); return; }
+  const me = agKey(document.getElementById('f-agence').value);
+  const found = findMatches(hasName ? cand : {nom:'', prenom:'', naissance:'', numeroPermis:cand.numeroPermis});
+  if(!found.length){ box.classList.remove('show'); return; }
+  const others = new Set(found.map(r=>agKey(r.agence)).filter(k=>k && k !== me));
+  const mine = found.some(r=>agKey(r.agence) === me);
+  let msg = '<div><b>Personne déjà connue du réseau.</b> ';
+  if(others.size) msg += 'Elle a déjà été signalée par <b>'+plural(others.size,'autre agence','autres agences')+'</b>. Votre signalement renforcera la crédibilité du dossier.';
+  else msg += 'Seule votre agence l\'a déjà signalée.';
+  if(mine) msg += ' Vérifiez que ce sinistre n\'a pas déjà été déclaré par votre agence.';
+  box.innerHTML = ic('users',18)+msg+'</div>';
+  box.classList.add('show');
+}
+
+/* =========================================================================
+   PRÉVENTION DES ABUS — limite quotidienne, sanctions, réputation
+   ========================================================================= */
+const DAILY_LIMIT = 5;
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function localDaily(){
+  try{
+    const v = localStorage.getItem('locatrack_daily_'+currentAccessCode) || '';
+    const [d, n] = v.split(':');
+    return d === todayStr() ? (parseInt(n,10) || 0) : 0;
+  }catch(e){ return 0; }
+}
+function bumpLocalDaily(){
+  try{ localStorage.setItem('locatrack_daily_'+currentAccessCode, todayStr()+':'+(localDaily()+1)); }catch(e){}
+}
+function agencyStats(name, list){
+  const isMine = !list;
+  list = list || reports;
+  const k = agKey(name);
+  const mine = k ? list.filter(r=>agKey(r.agence) === k) : [];
+  const rejected = mine.filter(r=>r.statut === 'rejete').length;
+  let limit = DAILY_LIMIT, sanction = '';
+  if(rejected >= 3){ limit = 0; sanction = 'suspended'; }
+  else if(rejected === 2){ limit = 1; sanction = 'restricted'; }
+  else if(rejected === 1){ limit = 3; sanction = 'warning'; }
+  const t = todayStr();
+  let today = mine.filter(r=>String(r.createdAt).startsWith(t)).length;
+  if(isMine) today = Math.max(today, localDaily());
+  return { rejected, limit, sanction, today, total:mine.length, regularises:mine.filter(r=>r.regularise && r.statut !== 'rejete').length };
+}
+/* Limite quotidienne et éventuelle sanction (onglet Signaler) */
+function renderLimitInfo(){
+  const box = document.getElementById('rep-report');
+  if(!box) return;
+  const name = (currentProfile && currentProfile.agence) || (document.getElementById('f-agence') ? document.getElementById('f-agence').value : '');
+  if(!agKey(name)){
+    box.innerHTML = '<div class="rules-box" style="margin-top:0;">Limite de <b>'+DAILY_LIMIT+' signalements par jour</b>. Un signalement reconnu mensonger est rejeté et sanctionné.</div>';
+    return;
+  }
+  const s = agencyStats(name);
+  let sanc = '';
+  if(s.sanction === 'suspended') sanc = '<div class="rep-sanction">Signalement suspendu : '+plural(s.rejected,'signalement rejeté','signalements rejetés')+' comme mensonger(s). Contactez l\'administration pour rétablir l\'accès.</div>';
+  else if(s.sanction === 'restricted') sanc = '<div class="rep-sanction">Accès restreint : '+plural(s.rejected,'signalement rejeté','signalements rejetés')+' comme mensonger(s). Limite réduite à '+s.limit+' par jour. Un rejet de plus entraînera la suspension.</div>';
+  else if(s.sanction === 'warning') sanc = '<div class="rep-sanction warn">Avertissement : 1 signalement a été rejeté comme mensonger. Limite réduite à '+s.limit+' par jour.</div>';
+  box.innerHTML = '<div class="rules-box" style="margin-top:0;">Aujourd\'hui : <b>'+s.today+' / '+s.limit+'</b> signalement(s). Un signalement reconnu mensonger est rejeté et sanctionné.</div>'+sanc;
+}
+/* Profil de l'agence : nombre de signalements + historique des clients signalés */
+function renderAgencyHistory(){
+  const box = document.getElementById('agency-history');
+  if(!box) return;
+  const name = (currentProfile && currentProfile.agence) || '';
+  if(!agKey(name)){
+    box.innerHTML = '<div class="rules-box" style="margin-top:0;">Renseignez le nom de votre agence puis enregistrez votre profil pour retrouver ici vos signalements.</div>';
+    return;
+  }
+  const mine = reports.filter(r=>agKey(r.agence) === agKey(name));
+  const s = agencyStats(name);
+  box.innerHTML = '<div class="stat-row" style="margin-bottom:14px;">'
+    +'<div class="stat-card"><div class="stat-num">'+mine.length+'</div><div class="stat-label">Signalements effectués</div></div>'
+    +'<div class="stat-card"><div class="stat-num">'+s.regularises+'</div><div class="stat-label">Dont régularisés</div></div></div>'
+    +(mine.length
+      ? '<div class="section-title">Historique des clients signalés</div><div style="max-height:300px; overflow-y:auto;">'
+        + mine.map(r=>{
+            const m = effStatus(r);
+            return '<div class="mini-row" onclick="openDetailById(\''+esc(r.id)+'\')">'
+              +'<div class="mini-ic">'+ic('user',18)+'</div>'
+              +'<div style="flex:1; min-width:0;"><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
+              +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+fmtDate(r.sinistre)+'</div>'
+              +'<div class="pill-row"><div class="status-pill '+m.cls+'">'+m.label+'</div></div></div>'
+              +ic('arrowRight',16)+'</div>';
+          }).join('')
+        + '</div>'
+      : '<p>Aucun signalement pour le moment.</p>');
+}
+function renderRepCards(){ renderLimitInfo(); renderAgencyHistory(); }
+
+/* =========================================================================
+   Sélecteurs type d'incident + jauge de gravité (formulaire)
+   ========================================================================= */
+function initIncidentUi(){
+  const sel = document.getElementById('f-type');
+  sel.innerHTML = '<option value="">Choisir un type d\'incident…</option>'
+    + INCIDENT_TYPES.map(t=>'<option value="'+t.id+'">'+esc(t.label)+'</option>').join('');
+  document.getElementById('e-type').innerHTML = '<option value="">Non précisé</option>'
+    + INCIDENT_TYPES.map(t=>'<option value="'+t.id+'">'+esc(t.label)+'</option>').join('');
+  document.getElementById('e-gravite').innerHTML = '<option value="0">Non précisée</option>'
+    + GRAVITY.map(g=>'<option value="'+g.l+'">'+g.label+'</option>').join('');
+  document.getElementById('gauge').innerHTML = GRAVITY.map(g=>
+    '<button type="button" class="gseg" data-l="'+g.l+'" style="--gc:'+g.color+'" onclick="setGravity('+g.l+', true)"><i></i><span>'+g.label+'</span></button>'
+  ).join('');
+  renderGauge();
+}
+function renderGauge(){
+  document.querySelectorAll('#gauge .gseg').forEach(b=>{
+    const l = Number(b.getAttribute('data-l'));
+    b.classList.toggle('on', l <= formGravity);
+    b.classList.toggle('cur', l === formGravity);
+  });
+  const g = gravMeta(formGravity);
+  document.getElementById('gauge-caption').innerHTML = g
+    ? '<b style="color:'+g.color+'">'+g.label+'</b> — '+esc(g.desc)
+    : 'Sélectionnez un niveau de gravité pour aider les agences à juger vite.';
+}
+function setGravity(l, manual){
+  formGravity = (manual && l === formGravity) ? 0 : l;
+  if(manual) gravityTouched = true;
+  renderGauge();
+}
+function onTypeChange(){
+  const t = INCIDENT_TYPES.find(x=>x.id === document.getElementById('f-type').value);
+  if(t && !gravityTouched) setGravity(t.g, false);
+  togglePrejudice();
+}
+/* Pas de préjudice (donc pas de remboursement) pour de faux documents */
+function togglePrejudice(){
+  const wrap = document.getElementById('f-prejudice-wrap');
+  if(!wrap) return;
+  const noDamage = document.getElementById('f-type').value === 'faux_documents';
+  wrap.style.display = noDamage ? 'none' : '';
+  if(noDamage) document.getElementById('f-prejudice').value = '';
+}
+function parseMoney(raw){
+  raw = String(raw || '').trim();
+  if(!raw) return null;
+  const n = parseFloat(raw.replace(/\s/g,'').replace(',', '.').replace(/€/g,''));
+  return (isFinite(n) && n >= 0 && n <= 1000000) ? Math.round(n*100)/100 : NaN;
+}
+
+/* =========================================================================
+   FORMULAIRE DE SIGNALEMENT
+   ========================================================================= */
+function openReportForm(){
+  ['f-agence','f-nom','f-prenom','f-naissance','f-lieu','f-permis','f-permis-num','f-type','f-sinistre','f-vehicule','f-prejudice','f-description']
+    .forEach(id=>document.getElementById(id).value = '');
+  document.getElementById('f-certify').checked = false;
+  togglePrejudice();
+  const fa = document.getElementById('f-agence');
+  if(currentProfile && currentProfile.agence){ fa.value = currentProfile.agence; fa.readOnly = true; }
+  else { fa.readOnly = false; }
+  formGravity = 0; gravityTouched = false; renderGauge();
+  document.getElementById('dup-hint').classList.remove('show');
+  renderRepCards();
+  formPhotos = [];
+  renderPhotoGrid();
+  idData.report = { recto:null, verso:null };
+  renderIdSlot('report','recto');
+  renderIdSlot('report','verso');
+  switchTab(1);
+}
+
+/* Champs obligatoires : on nomme précisément ce qui manque, on le surligne et on y fait défiler la page */
+const REQUIRED_FIELDS = [
+  ['f-agence', "Nom de l'agence"], ['f-nom', 'Nom'], ['f-prenom', 'Prénom'],
+  ['f-naissance', 'Date de naissance'], ['f-lieu', 'Lieu de naissance'],
+  ['f-permis-num', 'Numéro de permis de conduire'], ['f-permis', "Date d'obtention du permis"],
+  ['f-type', "Type d'incident"], ['f-sinistre', 'Date du sinistre'], ['f-vehicule', 'Véhicule loué']
+];
+function checkRequiredFields(){
+  document.querySelectorAll('.field-error').forEach(el=>el.classList.remove('field-error'));
+  const missing = REQUIRED_FIELDS.filter(([id])=>!String(document.getElementById(id).value || '').trim());
+  if(!missing.length) return true;
+  missing.forEach(([id])=>{
+    const box = document.getElementById(id).closest('.field');
+    if(box) box.classList.add('field-error');
+  });
+  const first = document.getElementById(missing[0][0]);
+  try{ first.scrollIntoView({ behavior:'smooth', block:'center' }); }catch(e){}
+  setTimeout(()=>{ try{ first.focus({ preventScroll:true }); }catch(e){} }, 350);
+  showToast((missing.length > 1 ? 'Champs manquants : ' : 'Champ manquant : ') + missing.map(m=>m[1]).join(', '));
+  return false;
+}
+document.addEventListener('input', e=>{ const f = e.target.closest && e.target.closest('.field'); if(f) f.classList.remove('field-error'); });
+document.addEventListener('change', e=>{ const f = e.target.closest && e.target.closest('.field'); if(f) f.classList.remove('field-error'); });
+
+async function submitReport(){
+  if(submittingReport) return;
+  if(!currentAccessCode){ showToast("Connectez-vous avec votre code adhérent."); return; }
+  const agence = document.getElementById('f-agence').value.trim();
+  const nom = document.getElementById('f-nom').value.trim();
+  const prenom = document.getElementById('f-prenom').value.trim();
+  const naissance = document.getElementById('f-naissance').value;
+  const lieu = document.getElementById('f-lieu').value.trim();
+  const permis = document.getElementById('f-permis').value;
+  const numeroPermis = document.getElementById('f-permis-num').value.trim();
+  const type = document.getElementById('f-type').value;
+  const sinistre = document.getElementById('f-sinistre').value;
+  const vehicule = document.getElementById('f-vehicule').value.trim();
+  const description = document.getElementById('f-description').value.trim();
+  const certify = document.getElementById('f-certify').checked;
+
+  if(!checkRequiredFields()) return;
+  if(!formGravity){ alert('Sélectionnez un niveau de gravité (vert, jaune, orange ou rouge).'); return; }
+  if(normPermis(numeroPermis).length < 5){ alert('Le numéro de permis semble incomplet.'); return; }
+  if(!certify){
+    alert("Vous devez certifier l'exactitude des informations avant d'enregistrer.");
+    return;
+  }
+  let prejudice = null;
+  if(type !== 'faux_documents'){
+    prejudice = parseMoney(document.getElementById('f-prejudice').value);
+    if(Number.isNaN(prejudice)){ alert('Le montant du préjudice est invalide (nombre positif attendu).'); return; }
+  }
+
+  /* Prévention des abus : sanctions puis limite quotidienne */
+  const st = agencyStats(agence);
+  if(st.sanction === 'suspended'){
+    alert("Votre agence est suspendue : plusieurs de ses signalements ont été rejetés comme mensongers. Contactez l'administration.");
+    return;
+  }
+  if(st.today >= st.limit){
+    alert('Limite quotidienne atteinte : votre agence peut enregistrer '+plural(st.limit,'signalement','signalements')+' par jour'+(st.sanction ? ' (limite réduite suite à une sanction)' : '')+'. Réessayez demain.');
+    return;
+  }
+
+  /* Détection de doublons */
+  const cand = { nom, prenom, naissance, numeroPermis };
+  const same = findMatches(cand);
+  const me = agKey(agence);
+  if(same.some(r=>agKey(r.agence) === me && r.sinistre === sinistre)){
+    alert('Votre agence a déjà signalé cette personne pour un sinistre à cette date.');
+    return;
+  }
+  const otherAgencies = new Set(same.map(r=>agKey(r.agence)).filter(k=>k && k !== me));
+
+  submittingReport = true;
+  showToast('Enregistrement du signalement…');
+  try{
+    const meta = { t:type, g:formGravity, pn:numeroPermis, pj:prejudice };
+    await rpc('create_report', { p_code: currentAccessCode, p_data: {
+      agence, nom, prenom, naissance, lieu, permis, sinistre, vehicule,
+      type, gravite: formGravity, numeroPermis,
+      description: encodeDesc(description, meta),
+      photos: formPhotos, idRecto: idData.report.recto, idVerso: idData.report.verso
+    }});
+    bumpLocalDaily();
+    await loadReports();
+    document.getElementById('confirm-msg').textContent = otherAgencies.size
+      ? 'Cette personne était déjà signalée par '+plural(otherAgencies.size,'autre agence','autres agences')+' : elle l\'est désormais par '+plural(otherAgencies.size+1,'agence','agences')+'.'
+      : 'Le signalement est désormais visible par les agences adhérentes du réseau.';
+    document.getElementById('modal-confirm').classList.add('active');
+    startConfirmCountdown(5);
+  } catch(e){ dbError(e); }
+  finally{ submittingReport = false; }
+}
+
+/* Après confirmation d'un signalement : retour automatique à l'accueil au bout de 5 secondes */
+let confirmTimer = null;
+function stopConfirmCountdown(){ clearInterval(confirmTimer); confirmTimer = null; }
+function startConfirmCountdown(sec){
+  stopConfirmCountdown();
+  const el = document.getElementById('confirm-countdown');
+  let left = sec;
+  const render = ()=>{ el.textContent = "Retour automatique à l'accueil dans "+left+" s"; };
+  render();
+  confirmTimer = setInterval(()=>{
+    left--;
+    if(left <= 0){ confirmGoHome(); return; }
+    render();
+  }, 1000);
+}
+function confirmGoHome(){
+  stopConfirmCountdown();
+  closeModal('modal-confirm');
+  goHome();
+}
+
+/* =========================================================================
+   ACCUEIL
+   ========================================================================= */
+function initialsOf(name){
+  const clean = (name||'').trim();
+  if(!clean) return '?';
+  return clean.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+function renderHome(){
+  const p = currentProfile || {};
+  const name = p.agence || 'Mon agence';
+  document.getElementById('agency-display-name').textContent = name;
+  document.getElementById('agency-initials').textContent = initialsOf(name);
+  document.getElementById('stat-total').textContent = reports.length;
+  const thisMonth = new Date().toISOString().slice(0,7);
+  document.getElementById('stat-month').textContent = reports.filter(r=>r.createdAt.startsWith(thisMonth)).length;
+
+  const recent = reports.slice(0,3);
+  document.getElementById('recent-list').innerHTML = recent.map(r=>
+    '<div class="mini-row" onclick="openDetailById(\''+r.id+'\')">'
+    +'<div class="mini-ic">'+ic('alertTriangle',18)+'</div>'
+    +'<div style="flex:1;"><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
+    +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.vehicule)+' · '+esc(r.agence)+'</div></div>'
+    +(gravMeta(r.gravite) ? '<span class="grav-pill" style="--gc:'+gravMeta(r.gravite).color+'; margin:0;" title="Gravité"><i class="grav-ico">⚠️</i>'+gravMeta(r.gravite).label+'</span>' : '')
+    +'</div>'
+  ).join('') || '<p>Aucun signalement pour le moment.</p>';
+}
+
+/* =========================================================================
+   RECHERCHE
+   ========================================================================= */
+function statusMeta(statut){
+  if(statut === 'confirme') return {label:'Confirmé', cls:'status-confirme'};
+  if(statut === 'conteste') return {label:'Contesté', cls:'status-conteste'};
+  if(statut === 'rejete') return {label:'Rejeté', cls:'status-attente'};
+  return {label:'En attente de vérification', cls:'status-attente'};
+}
+function tokenHit(q, t){
+  return t.startsWith(q) || (q.length >= 3 && t.includes(q)) || tokEq(q, t) || (q.length >= 4 && lev(q, t.slice(0, q.length)) <= 1);
+}
+function runSearch(){
+  const raw = document.getElementById('f-search').value.trim();
+  const container = document.getElementById('search-results');
+  const qt = normStr(raw).split(' ').filter(Boolean);
+  const qp = normPermis(raw);
+  if(!qt.length && qp.length < 4){
+    container.innerHTML = '<div class="empty-state"><div class="ic-circle">'+ic('compass',26)+'</div><p>Tapez un nom ou un n° de permis pour lancer une recherche</p></div>';
+    return;
+  }
+  const matches = reports.filter(r=>{
+    const tokens = normStr(r.nom+' '+r.prenom).split(' ').filter(Boolean);
+    const byName = qt.length > 0 && qt.every(q=>tokens.some(t=>tokenHit(q, t)));
+    const byPermis = qp.length >= 4 && normPermis(r.numeroPermis).includes(qp);
+    return byName || byPermis;
+  });
+  if(matches.length === 0){
+    container.innerHTML = '<div class="empty-state"><div class="ic-circle">'+ic('checkCircle',26)+'</div><p>Aucun signalement trouvé</p></div>';
+    return;
+  }
+  /* un résultat par personne (doublons regroupés) */
+  const seen = new Set(), groups = [];
+  matches.forEach(r=>{
+    const c = clusters[r.id];
+    const key = c ? c.id : r.id;
+    if(seen.has(key)) return;
+    seen.add(key);
+    groups.push({ c, rep: c ? c.reports[0] : r });
+  });
+  container.innerHTML = groups.map((g,i)=>{
+    const r = g.rep, meta = effStatus(r);
+    return '<div class="result-card" style="animation-delay:'+(i*70)+'ms" onclick="openDetailById(\''+esc(r.id)+'\')">'
+      +'<div class="mini-ic">'+ic('user',18)+'</div>'
+      +'<div style="flex:1; min-width:0;"><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
+      +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.agence)+'</div>'
+      +'<div class="pill-row"><div class="status-pill '+meta.cls+'">'+meta.label+'</div>'
+      +gravPill(g.c ? g.c.maxG : r.gravite)+dupBadge(g.c)+'</div></div>'
+      +ic('arrowRight',16)
+      +'</div>';
+  }).join('');
+}
+
+/* =========================================================================
+   DÉTAIL
+   ========================================================================= */
+function fmtEuro(n){ return Number(n).toLocaleString('fr-FR', { style:'currency', currency:'EUR' }); }
+function effStatus(r){
+  if(r.regularise && r.statut !== 'rejete') return { label:'Régularisé', cls:'status-regularise' };
+  return statusMeta(r.statut);
+}
+function isMine(r){
+  const me = currentProfile ? agKey(currentProfile.agence) : '';
+  return !!me && agKey(r.agence) === me;
+}
+function agAddr(r){
+  return r.agenceAdresse || (isMine(r) && currentProfile && currentProfile.emplacement) || '';
+}
+
+/* --- Régularisation (impayé payé, véhicule restitué) : réservée à l'agence auteure --- */
+function regulariseBlock(r){
+  if(!isMine(r) || r.statut === 'rejete') return '';
+  if(r.regularise){
+    return '<div class="section-label">Suivi</div>'
+      +'<button class="btn secondary" onclick="unregularise(\''+esc(r.id)+'\')">Annuler la régularisation</button>';
+  }
+  return '<div class="section-label">Suivi</div>'
+    +'<button class="btn" onclick="openRegulariseModal(\''+esc(r.id)+'\')">'+ic('checkCircle',18)+'Marquer comme régularisé</button>'
+    +'<div class="hint">À utiliser quand l\'impayé est réglé ou que le véhicule a été restitué.</div>';
+}
+let regTargetId = null;
+function openRegulariseModal(id){
+  regTargetId = id;
+  document.getElementById('reg-date').value = todayStr();
+  document.getElementById('modal-regularise').classList.add('active');
+}
+async function saveReportMeta(r, patch){
+  const meta = Object.assign({ t:r.type, g:r.gravite, pn:r.numeroPermis, pj:r.prejudice, rg:r.regularise || '' }, patch);
+  const ok = await rpc('update_own_report', { p_code: currentAccessCode, p_id: r.id, p_description: encodeDesc(r.description, meta) });
+  if(!ok){ showToast("Modification refusée : ce signalement n'appartient pas à votre agence."); return false; }
+  return true;
+}
+async function confirmRegularise(){
+  const r = reports.find(x=>x.id === regTargetId);
+  const date = document.getElementById('reg-date').value;
+  if(!r) return;
+  if(!date){ showToast('Choisissez la date de régularisation.'); return; }
+  try{
+    if(await saveReportMeta(r, { rg:date })){
+      closeModal('modal-regularise');
+      await loadReports();
+      showToast('Signalement marqué comme régularisé');
+      openDetailById(r.id);
+    }
+  } catch(e){ dbError(e); }
+}
+async function unregularise(id){
+  const r = reports.find(x=>x.id === id);
+  if(!r) return;
+  try{
+    if(await saveReportMeta(r, { rg:'' })){
+      await loadReports();
+      showToast('Régularisation annulée');
+      openDetailById(id);
+    }
+  } catch(e){ dbError(e); }
+}
+
+/* --- Tous les signalements liés à une même personne --- */
+let linkedBack = 'app';
+function openLinked(id){
+  const c = clusters[id];
+  if(!c) return;
+  const list = c.reports, first = list[0];
+  if(currentView !== 'linked') linkedBack = currentView;
+  document.getElementById('linked-content').innerHTML =
+    '<div class="detail-header"><div class="avatar-ring">'+ic('user',24)+'</div><div><h2>'+esc(first.prenom)+' '+esc(first.nom)+'</h2>'
+    +'<div class="mini-sub" style="margin-top:4px;">Signalé '+list.length+' fois · '+plural(c.agencyCount,'agence','agences')+'</div></div></div>'
+    +'<div class="section-label" style="margin-top:0;">Tous les signalements ('+list.length+')</div>'
+    +list.map(x=>{
+      const m = effStatus(x);
+      return '<div class="mini-row" onclick="openDetailById(\''+esc(x.id)+'\')">'
+        +'<div class="mini-ic">'+ic('alertTriangle',18)+'</div>'
+        +'<div style="flex:1; min-width:0;"><div class="mini-name">'+esc(x.agence)+(isMine(x) ? ' · votre agence' : '')+'</div>'
+        +'<div class="mini-sub">'+esc(agAddr(x) || 'Adresse non renseignée')+'</div>'
+        +'<div class="mini-sub">'+esc(typeLabel(x.type))+' · '+fmtDate(x.sinistre)+(x.prejudice !== null ? ' · '+esc(fmtEuro(x.prejudice)) : '')+'</div>'
+        +'<div class="pill-row"><div class="status-pill '+m.cls+'">'+m.label+'</div>'+gravPill(x.gravite)+'</div></div>'
+        +ic('arrowRight',16)+'</div>';
+    }).join('');
+  goTo('linked');
+}
+function closeLinked(){ goTo(linkedBack || 'app'); }
+
+function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; }
+async function openDetailById(id){
+  const r = reports.find(x=>x.id===id);
+  if(!r) return;
+  /* Photos du sinistre et cartes d'identité : chargées à la demande depuis la base */
+  if(!r.mediaLoaded && (r.photoCount > 0 || r.hasId)){
+    showToast('Chargement du dossier…');
+    try{
+      const m = await rpc('get_report_media', { p_code: currentAccessCode, p_id: id });
+      if(m){
+        r.photos = (m.photos || []).map(safeImg).filter(Boolean);
+        r.idRecto = safeImg(m.idRecto) || null;
+        r.idVerso = safeImg(m.idVerso) || null;
+        r.mediaLoaded = true;
+      }
+    } catch(e){ dbError(e); }
+  }
+  const meta = effStatus(r);
+  document.getElementById('detail-content').innerHTML =
+    '<div class="detail-header"><div class="avatar-ring">'+ic('user',24)+'</div>'
+    +'<div><h2>'+esc(r.prenom)+' '+esc(r.nom)+'</h2><div class="pill-row" style="margin-top:6px;"><div class="status-pill '+meta.cls+'" style="margin-top:4px;">'+meta.label+'</div>'+gravPill(r.gravite)+dupBadge(clusters[r.id])+'</div></div></div>'
+    +row('Type d\'incident', typeLabel(r.type))
+    +row('Agence déclarante', r.agence)
+    +row('Adresse de l\'agence', agAddr(r) || '—')
+    +row('Date de naissance', fmtDate(r.naissance))
+    +row('Lieu de naissance', r.lieu)
+    +row('N° de permis', r.numeroPermis || '—')
+    +row('Permis obtenu le', fmtDate(r.permis))
+    +row('Véhicule loué', r.vehicule)
+    +row('Date du sinistre', fmtDate(r.sinistre))
+    +(r.prejudice !== null ? row('Montant du préjudice', fmtEuro(r.prejudice)) : '')
+    +(r.regularise ? row('Régularisé le', fmtDate(r.regularise)) : '')
+    +row('Conservation jusqu\'au', fmtDate(r.expiration))
+    +'<div class="section-label">Description</div><p>'+(esc(r.description)||'—')+'</p>'
+    +(r.photos && r.photos.length ? '<div class="section-label">Photos</div><div class="photo-grid">'+r.photos.map(p=>'<div class="photo-thumb"><img src="'+p+'" onclick="openLightbox(this.src)"></div>').join('')+'</div>' : '')
+    +((r.idRecto || r.idVerso) ? '<div class="section-label">Pièce d\'identité</div><div class="photo-grid">'
+        +(r.idRecto ? '<div class="photo-thumb"><img src="'+r.idRecto+'" onclick="openLightbox(this.src)"></div>' : '')
+        +(r.idVerso ? '<div class="photo-thumb"><img src="'+r.idVerso+'" onclick="openLightbox(this.src)"></div>' : '')
+        +'</div>' : '')
+    +(function(){
+      const c = clusters[r.id];
+      if(!c || c.reports.length < 2) return '';
+      return '<div class="section-label">Signalements concordants ('+plural(c.agencyCount,'agence','agences')+')</div>'
+        + c.reports.filter(x=>x.id !== r.id).map(x=>
+          '<div class="mini-row" onclick="openDetailById(\''+esc(x.id)+'\')"><div class="mini-ic">'+ic('alertTriangle',18)+'</div>'
+          +'<div style="flex:1;"><div class="mini-name">'+esc(x.agence)+'</div>'
+          +'<div class="mini-sub">'+esc(typeLabel(x.type))+' · '+fmtDate(x.sinistre)+'</div></div>'
+          +(gravMeta(x.gravite) ? '<span class="grav-pill" style="--gc:'+gravMeta(x.gravite).color+'; margin:0;"><i class="grav-ico">⚠️</i>'+gravMeta(x.gravite).label+'</span>' : '')
+          +'</div>').join('');
+    })()
+    +regulariseBlock(r)
+    +'<div class="info-box">'+ic('info',18)+'<div>La personne concernée a été notifiée de ce signalement et dispose d\'un droit de contestation et de rectification.</div></div>';
+  goTo('detail');
+}
+function row(label, value){
+  return '<div class="info-row"><div class="info-label">'+esc(label)+'</div><div class="info-value">'+esc(value)+'</div></div>';
+}
+
+/* =========================================================================
+   ADMIN — édition / suppression
+   ========================================================================= */
+function planLabel(a){
+  if(!a.plan) return 'Sans paiement';
+  const name = a.plan === 'annuel' ? 'Annuel' : (a.plan === 'mensuel' ? 'Mensuel' : 'Offert');
+  const via = a.method === 'stripe' ? 'Stripe' : (a.method === 'paypal' ? 'PayPal' : (a.method === 'card' ? 'Carte' : 'Manuel'));
+  return name + ' · ' + via;
+}
+async function renderAdmin(){
+  const list = document.getElementById('admin-list');
+  if(!adminCode){ list.innerHTML = ''; return; }
+  list.innerHTML = '<p>Chargement…</p>';
+  try{
+    const [rep, ag] = await Promise.all([
+      rpc('admin_list_reports', { p_admin_code: adminCode }),
+      rpc('admin_list_agencies', { p_admin_code: adminCode })
+    ]);
+    if(rep === null){ adminCode = null; list.innerHTML = '<p>Session admin expirée.</p>'; return; }
+    adminReports = (Array.isArray(rep) ? rep : []).map(normalizeReport); adminAgencies = ag || [];
+  } catch(e){ list.innerHTML = ''; dbError(e); return; }
+
+  const agencesHtml = adminAgencies.map(a=>
+    '<div class="admin-row"><div class="admin-row-top"><div>'
+    +'<div class="mini-name">'+esc(a.agence || 'Profil non renseigné')+(a.numero ? ' · '+esc(a.numero) : '')+'</div>'
+    +'<div class="mini-sub">Code : '+esc(a.accessCode)+'</div>'
+    +(function(){ const s = agencyStats(a.agence, adminReports); return '<div class="mini-sub" style="font-weight:700;">'+plural(s.total,'signalement','signalements')+' · '+s.rejected+' rejeté(s)'+(s.sanction ? ' · sanction active' : '')+'</div>'; })()
+    +'<div class="mini-sub">'+esc(planLabel(a))+' · inscrite le '+fmtDate(a.createdAt)+'</div>'
+    +(a.emplacement ? '<div class="mini-sub">'+esc(a.emplacement)+'</div>' : '')
+    +(a.contact ? '<div class="mini-sub">'+esc(a.contact)+'</div>' : '')
+    +'</div></div></div>'
+  ).join('') || '<p>Aucune agence enregistrée.</p>';
+
+  const reportsHtml = adminReports.map(r=>{
+    const meta = effStatus(r);
+    return '<div class="admin-row">'
+      +'<div class="admin-row-top"><div><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
+      +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.vehicule)+' · '+esc(r.agence)+'</div></div>'
+      +'<div class="admin-actions">'
+      +'<div class="admin-icbtn" onclick="openEdit(\''+esc(r.id)+'\')">'+ic('edit',16)+'</div>'
+      +'<div class="admin-icbtn del" onclick="askDelete(\''+esc(r.id)+'\')">'+ic('trash',16)+'</div>'
+      +'</div></div>'
+      +'<div class="pill-row"><div class="status-pill '+meta.cls+'">'+meta.label+'</div>'+gravPill(r.gravite)+'</div>'
+      +'</div>';
+  }).join('') || '<div class="empty-state"><div class="ic-circle">'+ic('briefcase',26)+'</div><p>Aucun signalement enregistré</p></div>';
+
+  list.innerHTML = '<div class="section-label" style="margin-top:0;">Agences adhérentes ('+adminAgencies.length+')</div>'
+    + agencesHtml
+    + '<div class="section-label">Signalements ('+adminReports.length+')</div>'
+    + reportsHtml;
+}
+function openEdit(id){
+  const r = adminReports.find(x=>x.id===id);
+  if(!r) return;
+  editingId = id;
+  document.getElementById('e-nom').value = r.nom || '';
+  document.getElementById('e-prenom').value = r.prenom || '';
+  document.getElementById('e-vehicule').value = r.vehicule || '';
+  document.getElementById('e-prejudice').value = r.prejudice !== null ? String(r.prejudice) : '';
+  document.getElementById('e-description').value = r.description || '';
+  document.getElementById('e-statut').value = r.statut;
+  document.getElementById('e-type').value = r.type || '';
+  document.getElementById('e-gravite').value = String(r.gravite || 0);
+  document.getElementById('modal-edit').classList.add('active');
+}
+async function saveEdit(){
+  const nom = document.getElementById('e-nom').value.trim();
+  const prenom = document.getElementById('e-prenom').value.trim();
+  if(!editingId || !adminCode) return;
+  if(!nom || !prenom){ showToast('Le nom et le prénom sont obligatoires.'); return; }
+  const pj = parseMoney(document.getElementById('e-prejudice').value);
+  if(Number.isNaN(pj)){ showToast('Montant du préjudice invalide.'); return; }
+  try{
+    const ok = await rpc('admin_update_report', {
+      p_admin_code: adminCode, p_id: editingId, p_nom: nom, p_prenom: prenom,
+      p_vehicule: document.getElementById('e-vehicule').value.trim(),
+      p_description: encodeDesc(document.getElementById('e-description').value.trim(), {
+        t: document.getElementById('e-type').value,
+        g: parseInt(document.getElementById('e-gravite').value, 10) || 0,
+        pn: (adminReports.find(x=>x.id===editingId) || {}).numeroPermis || '',
+        pj: pj,
+        rg: (adminReports.find(x=>x.id===editingId) || {}).regularise || ''
+      }),
+      p_statut: document.getElementById('e-statut').value
+    });
+    if(!ok){ showToast('Modification refusée.'); return; }
+    closeModal('modal-edit');
+    await renderAdmin();
+    if(currentAccessCode) loadReports();
+  } catch(e){ dbError(e); }
+}
+function askDelete(id){
+  deletingId = id;
+  document.getElementById('modal-delete-confirm').classList.add('active');
+}
+async function confirmDelete(){
+  if(!deletingId || !adminCode) return;
+  try{
+    const ok = await rpc('admin_delete_report', { p_admin_code: adminCode, p_id: deletingId });
+    if(!ok){ showToast('Suppression refusée.'); return; }
+    closeModal('modal-delete-confirm');
+    await renderAdmin();
+    if(currentAccessCode) loadReports();
+  } catch(e){ dbError(e); }
+}
+
+/* =========================================================================
+   INITIALISATION DES ICÔNES DE MISE EN PAGE (statiques)
+   ========================================================================= */
+function initStaticIcons(){
+  document.querySelector('.ghost-admin').innerHTML = ic('lock',18);
+  document.getElementById('fab-home').innerHTML = ic('home',20);
+  document.querySelectorAll('#view-access .icon-btn')[0].innerHTML = ic('chevronLeft',20);
+  document.querySelector('#view-access .icon-hero').innerHTML = ic('key',28);
+  document.querySelector('#view-code .icon-hero').innerHTML = ic('key',28);
+  document.querySelector('#view-profile .icon-btn').innerHTML = ic('chevronLeft',20);
+  document.getElementById('agency-edit-ic').innerHTML = ic('edit',16);
+  ['report','profile'].forEach(ctx=>{ renderIdSlot(ctx,'recto'); renderIdSlot(ctx,'verso'); });
+  updateStripeButtonLabel();
+  document.querySelector('#view-subscription .icon-btn').innerHTML = ic('chevronLeft',20);
+  document.querySelectorAll('#view-subscription .ic-wrap')[0].innerHTML = ic('flag',18);
+  document.querySelectorAll('#view-subscription .ic-wrap')[1].innerHTML = ic('search',18);
+  document.querySelectorAll('#view-subscription .ic-wrap')[2].innerHTML = ic('shield',18);
+  document.querySelectorAll('.tab')[0].innerHTML = ic('home',20)+'<span>Accueil</span><div class="dot"></div>';
+  document.querySelectorAll('.tab')[1].innerHTML = ic('flag',20)+'<span>Signaler</span><div class="dot"></div>';
+  document.querySelectorAll('.tab')[2].innerHTML = ic('search',20)+'<span>Rechercher</span><div class="dot"></div>';
+  document.querySelectorAll('.grid-actions .ic-wrap')[0].innerHTML = ic('flag',20);
+  document.querySelectorAll('.grid-actions .ic-wrap')[1].innerHTML = ic('search',20);
+  document.querySelector('#view-detail .icon-btn').innerHTML = ic('chevronLeft',20);
+  document.querySelector('#view-admin .icon-btn').innerHTML = ic('chevronLeft',20);
+  document.querySelector('#modal-confirm .modal-icon').innerHTML = ic('checkCircle',24);
+  document.querySelector('#modal-regularise .modal-icon').innerHTML = ic('checkCircle',24);
+  document.querySelector('#view-linked .icon-btn').innerHTML = ic('chevronLeft',20);
+  document.querySelector('#modal-admin-login .modal-icon').innerHTML = ic('lock',24);
+  document.querySelector('#modal-delete-confirm .modal-icon').innerHTML = ic('trash',24);
+  document.getElementById('lightbox-close').innerHTML = ic('x',18);
+  renderPhotoGrid();
+}
+initStaticIcons();
+initIncidentUi();
+runSearch();
+handleStripeReturn().then(handled=>{ if(!handled) restoreSession(); });
+</script>
+</body>
+</html>
