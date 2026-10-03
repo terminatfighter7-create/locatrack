@@ -414,7 +414,18 @@
     *, *::before, *::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
   }
 
-  ::-webkit-scrollbar{ width:0; }
+  
+.avatar-ring{ overflow:hidden; }
+.avatar-ring img{ width:100%; height:100%; object-fit:cover; display:block; }
+.avatar-pick{ width:84px; height:84px; border-radius:24px; cursor:pointer; font-size:26px;
+  background:linear-gradient(135deg,var(--primary-light),var(--primary-dark)); color:#180800; font-weight:800;
+  display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--border); }
+.avatar-pick img{ width:100%; height:100%; object-fit:cover; }
+.ag-tag{ display:inline-flex; align-items:center; gap:7px; }
+.ag-av{ width:22px; height:22px; border-radius:7px; overflow:hidden; flex-shrink:0; display:inline-flex; align-items:center;
+  justify-content:center; font-size:9px; font-weight:800; color:#180800; background:linear-gradient(135deg,var(--primary-light),var(--primary-dark)); }
+.ag-av img{ width:100%; height:100%; object-fit:cover; }
+::-webkit-scrollbar{ width:0; }
 </style>
 </head>
 <body>
@@ -486,7 +497,37 @@
       </div>
 
       <div class="section-label">Paiement sécurisé</div>
-      <button class="btn" onclick="startStripeCheckout()" id="stripe-pay-btn">Payer <span id="stripe-pay-amount">29,90€</span> avec Stripe</button>
+      <button class="btn" onclick="goTo('verify')" id="stripe-pay-btn">Payer <span id="stripe-pay-amount">29,90€</span></button>
+      <div class="hint" style="text-align:center;">Étape suivante : vérification de votre agence, puis paiement sécurisé par Stripe.</div>
+    </div>
+  </div>
+
+  <!-- ============ VÉRIFICATION AVANT PAIEMENT ============ -->
+  <div class="view" id="view-verify">
+    <div class="top-nav">
+      <div class="icon-btn" onclick="goTo('subscription')"></div>
+      <div class="top-title">Vérification de l'agence</div>
+    </div>
+    <div style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
+      <h1>Vérifions votre agence</h1>
+      <p style="margin:10px 0 8px;">Pour protéger le réseau, envoyez la carte d'identité du gérant et le n° SIRET de l'agence avant de payer.</p>
+      <div class="section-label">Carte d'identité du gérant</div>
+      <div class="field-row2">
+        <div>
+          <label>Recto</label>
+          <input type="file" id="verify-id-recto-input" class="photo-input-hidden" accept="image/*" onchange="handleIdSelect(event,'verify','recto')">
+          <div class="id-slot" id="verify-id-recto-slot" onclick="document.getElementById('verify-id-recto-input').click()"></div>
+        </div>
+        <div>
+          <label>Verso</label>
+          <input type="file" id="verify-id-verso-input" class="photo-input-hidden" accept="image/*" onchange="handleIdSelect(event,'verify','verso')">
+          <div class="id-slot" id="verify-id-verso-slot" onclick="document.getElementById('verify-id-verso-input').click()"></div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px;"><label>N° SIRET (14 chiffres)</label>
+        <input type="text" id="v-siret" inputmode="numeric" maxlength="17" placeholder="123 456 789 00012" autocomplete="off"></div>
+      <div class="section-label">Paiement sécurisé</div>
+      <button class="btn" onclick="startStripeCheckout()">Payer <span id="verify-pay-amount">29,90€</span> avec Stripe</button>
       <div class="hint" style="text-align:center;">Paiement sécurisé par Stripe. Vous serez redirigé vers la page de paiement.</div>
     </div>
   </div>
@@ -511,7 +552,11 @@
       <div class="top-title">Profil de l'agence</div>
     </div>
     <div style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
+      <div class="field"><label>Photo de profil</label>
+        <input type="file" id="avatar-input" class="photo-input-hidden" accept="image/*" onchange="handleAvatarSelect(event)">
+        <div class="avatar-pick" id="profile-avatar-slot" onclick="document.getElementById('avatar-input').click()"></div></div>
       <div class="field"><label>Nom de l'agence</label><input type="text" id="p-agence" placeholder="Ex : Location Plus – Lyon"></div>
+      <div class="field"><label>N° SIRET</label><input type="text" id="p-siret" inputmode="numeric" maxlength="17" placeholder="14 chiffres"></div>
       <div class="section-label" style="margin-top:6px;">Signalements de l'agence</div>
       <div id="agency-history"></div>
 
@@ -950,7 +995,7 @@ let adminSelectedAgency = null;
 let adminProfiles = {};
 
 /* Stockage temporaire des images de carte d'identité en cours de dépôt */
-let idData = { report:{recto:null, verso:null}, profile:{recto:null, verso:null} };
+let idData = { report:{recto:null, verso:null}, profile:{recto:null, verso:null}, verify:{recto:null, verso:null} };
 
 async function loadReports(){
   if(!currentAccessCode) return;
@@ -959,6 +1004,7 @@ async function loadReports(){
     reports = (Array.isArray(list) ? list : []).map(normalizeReport);
     clusters = buildClusters(reports);
     reportsLoaded = true;
+    await loadAvatars();
     renderRepCards();
   } catch(e){ dbError(e); }
 }
@@ -1054,7 +1100,7 @@ async function submitAccessCode(){
 function logout(){
   clearSession();
   currentAccessCode = null; currentProfile = null;
-  reports = []; clusters = {}; reportsLoaded = false;
+  reports = []; clusters = {}; reportsLoaded = false; myAvatar = null; avatarMap = {};
   goTo('landing');
 }
 async function restoreSession(){
@@ -1081,6 +1127,8 @@ function updateStripeButtonLabel(){
   const plan = PLAN_PRICES[selectedPlanIndex];
   const amountEl = document.getElementById('stripe-pay-amount');
   if(amountEl && plan) amountEl.textContent = plan.amount.replace('.',',')+'€';
+  const vEl = document.getElementById('verify-pay-amount');
+  if(vEl && plan) vEl.textContent = plan.amount.replace('.',',')+'€';
 }
 
 /* =========================================================================
@@ -1095,9 +1143,17 @@ const STRIPE_LINKS = {
   annuel:  'https://buy.stripe.com/test_00w8wQcS26i5dr55OLcjS01'
 };
 
+const PENDING_KEY = 'locatrack_pending_kyc';
+function loadPending(){ try{ return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); }catch(e){ return null; } }
+function clearPending(){ try{ localStorage.removeItem(PENDING_KEY); }catch(e){} }
 function startStripeCheckout(){
+  const siret = (document.getElementById('v-siret').value || '').replace(/\D/g,'');
+  if(!idData.verify.recto || !idData.verify.verso){ showToast("Ajoutez le recto ET le verso de la carte d'identité du gérant."); return; }
+  if(siret.length !== 14){ showToast('Le n° SIRET doit comporter 14 chiffres.'); return; }
+  try{
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ siret:siret, recto:idData.verify.recto, verso:idData.verify.verso }));
+  }catch(e){ showToast("Impossible de conserver vos documents sur cet appareil. Réessayez avec des photos plus légères."); return; }
   const url = STRIPE_LINKS[PLAN_PRICES[selectedPlanIndex].plan];
-  /* Si la page est affichée dans un aperçu (cadre), on ouvre Stripe dans un nouvel onglet */
   if(window.top !== window.self){
     const w = window.open(url, '_blank');
     if(!w) location.href = url;
@@ -1125,9 +1181,16 @@ async function completeSubscription(method, reference, last4){
       p_method: method, p_reference: reference || null, p_card_last4: last4 || null
     });
     currentAccessCode = code;
-    currentProfile = { agence:'', numero:'', emplacement:'', contact:'', idRecto:null, idVerso:null };
+    const pend = loadPending();
+    currentProfile = { agence:'', numero:(pend && pend.siret) || '', emplacement:'', contact:'', idRecto:(pend && pend.recto) || null, idVerso:(pend && pend.verso) || null };
     reports = []; reportsLoaded = false;
     saveSession(code);
+    if(pend){
+      try{
+        await rpc('update_agency', { p_code: code, p_agence:'', p_numero: pend.siret, p_emplacement:'', p_contact:'', p_id_recto: pend.recto, p_id_verso: pend.verso });
+        clearPending();
+      }catch(e){ showToast("Documents non enregistrés : ils seront renvoyés quand vous enregistrerez votre profil."); }
+    }
     document.getElementById('generated-code-display').value = code;
     goTo('code');
     return true;
@@ -1151,6 +1214,8 @@ function openProfileView(){
   document.getElementById('p-contact').value = p.contact || '';
   idData.profile.recto = safeImg(p.idRecto) || null;
   idData.profile.verso = safeImg(p.idVerso) || null;
+  document.getElementById('p-siret').value = p.numero || '';
+  renderAvatarPick();
   renderIdSlot('profile','recto');
   renderIdSlot('profile','verso');
   renderRepCards();
@@ -1158,9 +1223,11 @@ function openProfileView(){
 }
 async function saveProfile(){
   if(!currentAccessCode) return;
+  const _sv = document.getElementById('p-siret').value.replace(/\D/g,'');
+  if(_sv && _sv.length !== 14){ showToast('Le n° SIRET doit comporter 14 chiffres.'); return; }
   const next = {
     agence: document.getElementById('p-agence').value.trim(),
-    numero: (currentProfile && currentProfile.numero) || '',
+    numero: document.getElementById('p-siret').value.replace(/\D/g,''),
     emplacement: document.getElementById('p-emplacement').value.trim(),
     contact: document.getElementById('p-contact').value.trim(),
     idRecto: idData.profile.recto, idVerso: idData.profile.verso
@@ -1172,7 +1239,7 @@ async function saveProfile(){
       p_id_recto: next.idRecto, p_id_verso: next.idVerso
     });
     if(!ok){ showToast("Code d'accès invalide. Reconnectez-vous."); return; }
-    currentProfile = next;
+    currentProfile = next; clearPending();
     saveSession(currentAccessCode);
     if(!reportsLoaded) await loadReports();
     goTo('app');
@@ -1743,7 +1810,7 @@ function renderHome(){
   const p = currentProfile || {};
   const name = p.agence || 'Mon agence';
   document.getElementById('agency-display-name').textContent = name;
-  document.getElementById('agency-initials').textContent = initialsOf(name);
+  document.getElementById('agency-initials').innerHTML = avatarInner(name, ownAvatar());
   document.getElementById('stat-total').textContent = reports.length;
   const thisMonth = new Date().toISOString().slice(0,7);
   document.getElementById('stat-month').textContent = reports.filter(r=>r.createdAt.startsWith(thisMonth)).length;
@@ -1892,7 +1959,7 @@ function openLinked(id){
       const m = effStatus(x);
       return '<div class="mini-row" onclick="openDetailById(\''+esc(x.id)+'\')">'
         +'<div class="mini-ic">'+ic('alertTriangle',18)+'</div>'
-        +'<div style="flex:1; min-width:0;"><div class="mini-name">'+esc(x.agence)+(isMine(x) ? ' · votre agence' : '')+'</div>'
+        +'<div style="flex:1; min-width:0;"><div class="mini-name">'+agencyTag(x.agence)+(isMine(x) ? ' · votre agence' : '')+'</div>'
         +'<div class="mini-sub">'+esc(agAddr(x) || 'Adresse non renseignée')+'</div>'
         +'<div class="mini-sub">'+esc(typeLabel(x.type))+' · '+fmtDate(x.sinistre)+(x.prejudice !== null ? ' · '+esc(fmtEuro(x.prejudice)) : '')+'</div>'
         +'<div class="pill-row"><div class="status-pill '+m.cls+'">'+m.label+'</div>'+gravPill(x.gravite)+'</div></div>'
@@ -1924,7 +1991,7 @@ async function openDetailById(id){
     '<div class="detail-header"><div class="avatar-ring">'+ic('user',24)+'</div>'
     +'<div><h2>'+esc(r.prenom)+' '+esc(r.nom)+'</h2><div class="pill-row" style="margin-top:6px;"><div class="status-pill '+meta.cls+'" style="margin-top:4px;">'+meta.label+'</div>'+gravPill(r.gravite)+dupBadge(clusters[r.id])+'</div></div></div>'
     +row('Type d\'incident', typeLabel(r.type))
-    +row('Agence déclarante', r.agence)
+    +'<div class="info-row"><div class="info-label">Agence déclarante</div><div class="info-value">'+agencyTag(r.agence)+'</div></div>'
     +row('Adresse de l\'agence', agAddr(r) || '—')
     +row('Date de naissance', fmtDate(r.naissance))
     +row('Lieu de naissance', r.lieu)
@@ -2016,6 +2083,7 @@ function adminProfileBlock(a){
   return '<div class="section-label">Profil de l\'agence</div>'
     +'<div class="admin-row">'
     +'<div class="field"><label>Nom de l\'agence</label>'+val(name)+'</div>'
+    +'<div class="field"><label>N° SIRET</label>'+val((p && p.numero) || a.numero)+'</div>'
     +'<div class="field"><label>Carte d\'identité du gérant</label>'
       +'<div class="field-row2" style="margin-top:6px;">'
         +'<div><label style="font-size:11px;">Recto</label>'+slot(recto)+'</div>'
@@ -2153,6 +2221,38 @@ async function confirmDelete(){
 /* =========================================================================
    INITIALISATION DES ICÔNES DE MISE EN PAGE (statiques)
    ========================================================================= */
+let avatarMap = {}, myAvatar = null;
+function ownAvatar(){ return myAvatar || avatarMap[agKey((currentProfile && currentProfile.agence) || '')] || ''; }
+function avatarInner(name, src){ src = safeImg(src); return src ? '<img src="'+src+'" alt="">' : esc(initialsOf(name)); }
+function agencyTag(name){
+  return '<span class="ag-tag"><span class="ag-av">'+avatarInner(name, avatarMap[agKey(name)])+'</span>'+esc(name)+'</span>';
+}
+function renderAvatarPick(){
+  const el = document.getElementById('profile-avatar-slot');
+  if(el) el.innerHTML = avatarInner((currentProfile && currentProfile.agence) || '', ownAvatar());
+}
+async function loadAvatars(){
+  try{
+    const l = await rpc('get_agency_avatars', { p_code: currentAccessCode });
+    avatarMap = {};
+    (l || []).forEach(a=>{ if(a.agence && a.avatar) avatarMap[agKey(a.agence)] = a.avatar; });
+  }catch(e){}
+}
+async function handleAvatarSelect(evt){
+  const file = evt.target.files && evt.target.files[0];
+  evt.target.value = '';
+  if(!file) return;
+  try{
+    const img = await compressImage(file, 256, 0.8);
+    await rpc('set_agency_avatar', { p_code: currentAccessCode, p_avatar: img });
+    myAvatar = img;
+    const n = (currentProfile && currentProfile.agence) || '';
+    if(n) avatarMap[agKey(n)] = img;
+    renderAvatarPick(); renderHome();
+    showToast('Photo de profil enregistrée');
+  }catch(e){ dbError(e); }
+}
+
 function initStaticIcons(){
   document.querySelector('.ghost-admin').innerHTML = ic('lock',18);
   document.getElementById('fab-home').innerHTML = ic('home',20);
@@ -2180,6 +2280,8 @@ function initStaticIcons(){
   document.querySelector('#modal-admin-login .modal-icon').innerHTML = ic('lock',24);
   document.querySelector('#modal-delete-confirm .modal-icon').innerHTML = ic('trash',24);
   document.getElementById('lightbox-close').innerHTML = ic('x',18);
+  document.querySelector('#view-verify .icon-btn').innerHTML = ic('chevronLeft',20);
+  renderIdSlot('verify','recto'); renderIdSlot('verify','verso');
   renderPhotoGrid();
 }
 initStaticIcons();
