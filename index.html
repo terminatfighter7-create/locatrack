@@ -369,6 +369,18 @@
   img, video{ max-width:100%; }
   .modal-box{ max-height:90%; overflow-y:auto; }
   .detail-header h2, .mini-title{ overflow-wrap:anywhere; }
+
+  /* ===== CGU + mention obligatoire (avant paiement) ===== */
+  .cgu-alert{ border:2px solid #e11d2e; background:rgba(225,29,46,.12); border-radius:14px; padding:14px 14px 14px; margin:18px 0 6px; }
+  .cgu-alert-title{ color:#ff3b4d; font-weight:900; font-size:13px; letter-spacing:.8px; text-transform:uppercase; margin-bottom:8px; }
+  .cgu-alert p{ color:#ff3b4d; font-weight:800; font-size:13.5px; line-height:1.55; margin:0; }
+  .cgu-box{ max-height:210px; overflow-y:auto; border:1px solid var(--border); background:var(--surface-2); border-radius:12px; padding:14px; font-size:12.5px; line-height:1.6; color:var(--text-2, var(--text)); }
+  .cgu-box h4{ font-size:12.5px; margin:12px 0 4px; color:var(--text); }
+  .cgu-box h4:first-child{ margin-top:0; }
+  .cgu-box p{ margin:0 0 6px; }
+  .cgu-check{ display:flex; gap:10px; align-items:flex-start; margin:14px 0 4px; font-size:13px; line-height:1.5; cursor:pointer; }
+  .cgu-check input{ width:20px; height:20px; margin-top:1px; flex-shrink:0; accent-color:var(--primary); }
+  .cgu-check.field-error{ color:#ff3b4d; }
   .field-error input, .field-error select, .field-error textarea{ border-color:var(--danger) !important; box-shadow:0 0 0 3px rgba(230,72,90,.18); }
   .field-error > label{ color:var(--danger); }
 
@@ -526,10 +538,50 @@
       </div>
       <div class="field" style="margin-top:14px;"><label>N° SIRET (14 chiffres)</label>
         <input type="text" id="v-siret" inputmode="numeric" maxlength="17" placeholder="123 456 789 00012" autocomplete="off"></div>
+      <div class="section-label">Conditions générales d'utilisation</div>
+      <div class="cgu-alert" role="alert">
+        <div class="cgu-alert-title">⚠ Mention obligatoire — à lire avant de payer</div>
+        <p>Vous devez impérativement faire figurer dans chacun de vos contrats de location une clause autorisant la réutilisation des données et documents personnels du locataire, à des fins de prévention entre agences des profils à risque.<br><br>Tout contrat non rédigé avec cette clause et non signé par le client est entièrement sous votre responsabilité : si le client se retourne contre Loca'Track ou contre l'agence de location, seule l'agence sera considérée comme responsable.</p>
+      </div>
+      <div class="cgu-box" id="cgu-box" tabindex="0">
+        <h4>1. Objet</h4>
+        <p>Les présentes conditions générales d'utilisation (« CGU ») encadrent l'accès et l'utilisation de la plateforme Loca'Track par les agences de location abonnées (« l'Agence »). Toute souscription implique l'acceptation pleine et entière des CGU.</p>
+        <h4>2. Accès au service</h4>
+        <p>L'accès est réservé aux professionnels de la location. L'Agence fournit la carte d'identité de son gérant et son numéro SIRET pour vérification. Loca'Track peut refuser ou suspendre un accès si ces éléments sont inexacts, incomplets ou frauduleux.</p>
+        <h4>3. Abonnement et paiement</h4>
+        <p>L'abonnement (mensuel ou annuel) est payable par Stripe et se renouvelle automatiquement chaque mois ou chaque année jusqu'à sa résiliation. Si un paiement n'est pas reçu, le compte de l'Agence est mis en pause jusqu'à régularisation. L'abonnement peut être résilié à tout moment depuis le profil de l'agence : la résiliation est immédiate, le code d'accès est désactivé et les paiements suivants sont annulés. La période déjà payée n'est pas remboursée : le mois en cours pour l'abonnement mensuel, l'année entière pour l'abonnement annuel.</p>
+        <h4>4. Obligations de l'Agence</h4>
+        <p>L'Agence s'engage à ne publier que des informations exactes, objectives et vérifiables, à ne pas utiliser la plateforme à des fins diffamatoires, discriminatoires ou étrangères à la prévention des impayés et des dégradations, et à garder confidentiel son code d'accès.</p>
+        <h4>5. Clause obligatoire dans les contrats de location</h4>
+        <p>L'Agence s'engage à insérer dans chacun de ses contrats de location une clause informant le locataire de la réutilisation de ses données et documents personnels à des fins de prévention entre agences des profils à risque, et à faire signer ce contrat par le locataire. Tout contrat non rédigé avec cette clause et non signé par le client est établi sous la seule responsabilité de l'Agence.</p>
+        <h4>6. Responsabilité</h4>
+        <p>Les signalements sont rédigés par les agences, sous leur seule responsabilité. Si un locataire ou un tiers conteste un signalement ou la réutilisation de ses données, ou se retourne contre Loca'Track ou contre l'Agence, seule l'Agence ayant saisi l'information ou n'ayant pas respecté la clause de l'article 5 sera considérée comme responsable. Loca'Track agit en qualité d'intermédiaire technique.</p>
+        <h4>7. Données personnelles</h4>
+        <p>Les données sont traitées conformément à la réglementation applicable (RGPD). Les personnes concernées disposent d'un droit d'accès, de rectification, d'opposition et d'effacement, que l'Agence s'engage à faciliter.</p>
+        <h4>8. Suspension et résiliation</h4>
+        <p>Loca'Track peut suspendre ou résilier un compte en cas de manquement aux CGU, notamment en cas de non-respect de l'article 5, sans remboursement de la période en cours. Aucun remboursement n'est dû en cas de résiliation ou de pause du compte.</p>
+        <h4>9. Modification des CGU</h4>
+        <p>Loca'Track peut modifier les CGU. La version applicable est celle acceptée lors de la souscription, puis celle en vigueur lors de chaque renouvellement.</p>
+      </div>
+      <label class="cgu-check" id="cgu-check-label">
+        <input type="checkbox" id="cgu-accept" onchange="onCguToggle()">
+        <span>J'ai lu et j'accepte les conditions générales d'utilisation, y compris la mention obligatoire en rouge ci-dessus (articles 5 et 6) et les conditions d'abonnement (renouvellement automatique, résiliation sans remboursement de la période en cours), en tant que représentant de l'agence.</span>
+      </label>
       <div class="section-label">Paiement sécurisé</div>
-      <button class="btn" onclick="startStripeCheckout()">Payer <span id="verify-pay-amount">29,90€</span> avec Stripe</button>
-      <div class="hint" style="text-align:center;">Paiement sécurisé par Stripe. Vous serez redirigé vers la page de paiement.</div>
+      <button class="btn" id="verify-pay-btn" disabled onclick="startStripeCheckout()">Payer <span id="verify-pay-amount">29,90€</span> avec Stripe</button>
+      <div class="hint" style="text-align:center;">Paiement sécurisé par Stripe. Vous serez redirigé vers la page de paiement.<br>Abonnement à renouvellement automatique, résiliable à tout moment depuis votre profil. La période en cours n'est jamais remboursée. Si un paiement n'est pas reçu, votre compte est mis en pause.</div>
     </div>
+  </div>
+
+  <!-- ============ COMPTE EN PAUSE (paiement non reçu) ============ -->
+  <div class="view center-view" id="view-paused">
+    <div class="icon-hero" style="color:var(--danger);">⏸</div>
+    <h1>Compte en pause</h1>
+    <div class="cgu-alert" style="margin:14px 0 18px;"><p>Votre paiement n'a pas été reçu. L'accès à votre espace est suspendu jusqu'à la régularisation de votre abonnement.</p></div>
+    <p style="margin:0 0 18px;">Mettez à jour votre moyen de paiement : votre compte sera réactivé automatiquement dès que le paiement sera reçu.</p>
+    <button class="btn" onclick="openBillingPortal()">Régulariser mon paiement</button>
+    <button class="btn secondary" onclick="logout()" style="margin-top:10px;">Retour à l'accueil</button>
+    <button class="btn danger" onclick="openCancelModal()" style="margin-top:10px;">Résilier mon abonnement</button>
   </div>
 
   <!-- ============ CODE ADHÉRENT GÉNÉRÉ ============ -->
@@ -579,6 +631,10 @@
 
       <button class="btn" onclick="saveProfile()" style="margin-top:8px;">Enregistrer mon profil</button>
       <button class="btn secondary" onclick="logout()" style="margin-top:10px;">Se déconnecter</button>
+
+      <div class="section-label" style="margin-top:26px;">Abonnement</div>
+      <div class="hint" style="margin-top:0;">Votre abonnement se renouvelle automatiquement chaque mois ou chaque année. Si un paiement n'est pas reçu, votre compte est mis en pause. En cas de résiliation, la période en cours n'est pas remboursée.</div>
+      <button class="btn danger" onclick="openCancelModal()">Résilier mon abonnement</button>
     </div>
   </div>
 
@@ -829,6 +885,18 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-cancel-sub">
+    <div class="modal-box">
+      <div class="modal-icon" style="color:var(--danger);"></div>
+      <h3>Résilier votre abonnement ?</h3>
+      <div class="cgu-alert" style="margin:0 0 14px;"><p style="font-size:12.5px;">La résiliation est immédiate et définitive : votre code d'accès est désactivé et les paiements suivants sont annulés.<br><br>Aucun remboursement : le paiement de la période en cours n'est pas remboursé (le mois en cours pour l'abonnement mensuel, l'année entière pour l'abonnement annuel).</p></div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn secondary" onclick="closeModal('modal-cancel-sub')">Annuler</button>
+        <button class="btn danger" id="cancel-sub-btn" onclick="confirmCancelSub()">Résilier</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="modal-agency-action">
     <div class="modal-box">
       <div class="modal-icon" style="color:var(--danger);"></div>
@@ -908,6 +976,21 @@ async function rpc(fn, args){
   return text ? JSON.parse(text) : null;
 }
 
+/* Fonctions serveur (Supabase Edge Functions) : paiement, résiliation, portail Stripe */
+async function fnCall(name, body){
+  let res;
+  try{
+    res = await fetch(SUPABASE_URL + '/functions/v1/' + name, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey':SUPABASE_KEY, 'Authorization':'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify(body || {})
+    });
+  } catch(e){ throw new Error('network'); }
+  let data = {}; try{ data = await res.json(); }catch(_){}
+  if(!res.ok){ const err = new Error(data.error || ('http ' + res.status)); err.detail = data; throw err; }
+  return data;
+}
+
 let toastTimer = null;
 /* Copie du code d'accès dans le presse-papiers */
 async function copyAccessCode(){
@@ -942,6 +1025,10 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 4200);
 }
 function dbError(e){
+  if(e && e.message && e.message.indexOf('42501') !== -1){
+    showToast("Votre compte est en pause ou n'est plus actif. Reconnectez-vous depuis l'accueil.");
+    return;
+  }
   showToast(e && e.message === 'network'
     ? "Base de données injoignable. Vérifiez votre connexion (l'aperçu Claude bloque l'accès réseau : ouvrez le fichier HTML dans votre navigateur)."
     : "Une erreur est survenue lors de l'enregistrement. Réessayez.");
@@ -1090,8 +1177,30 @@ async function enterApp(code, profile){
   currentAccessCode = code;
   currentProfile = profile;
   saveSession(code);
+  if(profile && profile.paused){ goTo('paused'); return; }
   await loadReports();
   goTo('app');
+}
+async function openBillingPortal(){
+  try{
+    const d = await fnCall('billing-portal', { code: currentAccessCode });
+    if(d.url){ location.href = d.url; return; }
+    throw new Error('no url');
+  }catch(e){ showToast("Impossible d'ouvrir la page de paiement. Réessayez ou contactez l'assistance."); }
+}
+function openCancelModal(){ document.getElementById('modal-cancel-sub').classList.add('active'); }
+async function confirmCancelSub(){
+  const btn = document.getElementById('cancel-sub-btn');
+  btn.disabled = true;
+  try{
+    await fnCall('cancel-subscription', { code: currentAccessCode });
+    closeModal('modal-cancel-sub');
+    logout();
+    showToast("Abonnement résilié. Votre code d'accès est désactivé et les prochains paiements sont annulés. La période en cours n'est pas remboursée.");
+  }catch(e){
+    btn.disabled = false;
+    showToast("La résiliation a échoué. Réessayez ou contactez l'assistance.");
+  }
 }
 async function submitAccessCode(){
   const val = document.getElementById('access-code').value.trim().toUpperCase();
@@ -1158,12 +1267,23 @@ const STRIPE_LINKS = {
 const PENDING_KEY = 'locatrack_pending_kyc';
 function loadPending(){ try{ return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); }catch(e){ return null; } }
 function clearPending(){ try{ localStorage.removeItem(PENDING_KEY); }catch(e){} }
+function onCguToggle(){
+  const c = document.getElementById('cgu-accept').checked;
+  document.getElementById('verify-pay-btn').disabled = !c;
+  document.getElementById('cgu-check-label').classList.remove('field-error');
+}
 function startStripeCheckout(){
   const siret = (document.getElementById('v-siret').value || '').replace(/\D/g,'');
   if(!idData.verify.recto || !idData.verify.verso){ showToast("Ajoutez le recto ET le verso de la carte d'identité du gérant."); return; }
   if(siret.length !== 14){ showToast('Le n° SIRET doit comporter 14 chiffres.'); return; }
+  const cgu = document.getElementById('cgu-accept');
+  if(!cgu || !cgu.checked){
+    document.getElementById('cgu-check-label').classList.add('field-error');
+    showToast("Vous devez accepter les conditions générales d'utilisation pour payer.");
+    return;
+  }
   try{
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ siret:siret, recto:idData.verify.recto, verso:idData.verify.verso }));
+    localStorage.setItem(PENDING_KEY, JSON.stringify({ siret:siret, recto:idData.verify.recto, verso:idData.verify.verso, cguAcceptedAt:new Date().toISOString(), cguVersion:'2026-10' }));
   }catch(e){ showToast("Impossible de conserver vos documents sur cet appareil. Réessayez avec des photos plus légères."); return; }
   const url = STRIPE_LINKS[PLAN_PRICES[selectedPlanIndex].plan];
   if(window.top !== window.self){
@@ -1176,22 +1296,24 @@ function startStripeCheckout(){
 
 /* Retour de Stripe : création du compte agence */
 async function handleStripeReturn(){
-  const plan = new URLSearchParams(location.search).get('paye');
+  const q = new URLSearchParams(location.search);
+  const plan = q.get('paye'), sessionId = q.get('session_id');
   if(plan !== 'mensuel' && plan !== 'annuel') return false;
   history.replaceState(null, '', location.pathname);
+  if(!sessionId){ showToast("Paiement non vérifié : aucun compte n'a été créé. Contactez l'assistance si vous avez été débité."); return false; }
   selectedPlanIndex = plan === 'annuel' ? 1 : 0;
-  await completeSubscription('card', 'stripe', null);
+  await completeSubscription(sessionId);
   return true;
 }
 
 /* Après paiement, le compte agence et son code d'accès sont créés et
    enregistrés en base (code aléatoire de 8 caractères, généré côté serveur). */
-async function completeSubscription(method, reference, last4){
+async function completeSubscription(sessionId){
   try{
-    const code = await rpc('register_agency', {
-      p_plan: selectedPlanIndex === 1 ? 'annuel' : 'mensuel',
-      p_method: method, p_reference: reference || null, p_card_last4: last4 || null
-    });
+    /* Le serveur vérifie auprès de Stripe que l'abonnement est réellement payé avant de créer le compte */
+    const data = await fnCall('stripe-register', { session_id: sessionId });
+    const code = data.code;
+    if(!code) throw new Error('no code');
     currentAccessCode = code;
     const pend = loadPending();
     currentProfile = { agence:'', numero:(pend && pend.siret) || '', emplacement:'', contact:'', idRecto:(pend && pend.recto) || null, idVerso:(pend && pend.verso) || null };
@@ -2091,7 +2213,11 @@ function planLabel(a){
   if(!a.plan) return 'Sans paiement';
   const name = a.plan === 'annuel' ? 'Annuel' : (a.plan === 'mensuel' ? 'Mensuel' : 'Offert');
   const via = a.method === 'stripe' ? 'Stripe' : (a.method === 'paypal' ? 'PayPal' : (a.method === 'card' ? 'Carte' : 'Manuel'));
-  return name + ' · ' + via;
+  let label = name + ' · ' + via;
+  if(a.subStatus === 'paused') label += ' · EN PAUSE (paiement non reçu)';
+  else if(a.subStatus === 'canceled') label += ' · Résilié';
+  else if(a.paidUntil) label += ' · payé jusqu\'au ' + a.paidUntil;
+  return label;
 }
 async function renderAdmin(){
   const list = document.getElementById('admin-list');
