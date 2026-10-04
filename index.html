@@ -137,6 +137,11 @@
   @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
   .landing-actions{ width:100%; margin-top:48px; display:flex; flex-direction:column; gap:12px;
     opacity:0; animation:fadeUp .6s ease 1.15s forwards; }
+  .promo-wrap{ position:relative; width:100%; }
+  .promo-bubble{ position:absolute; top:-13px; right:-3px; z-index:2; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:900;
+    letter-spacing:.5px; text-transform:uppercase; color:#fff; background:linear-gradient(135deg,#ffb020,#ff5a00); border:2px solid var(--bg, #0b0b0f);
+    box-shadow:0 4px 16px rgba(255,106,0,.6); transform:rotate(6deg); animation:promoPulse 1.8s ease-in-out infinite; pointer-events:none; white-space:nowrap; }
+  @keyframes promoPulse{ 0%,100%{ transform:rotate(6deg) scale(1); box-shadow:0 4px 16px rgba(255,106,0,.55); } 50%{ transform:rotate(6deg) scale(1.1); box-shadow:0 6px 24px rgba(255,106,0,.9); } }
   .landing-line{ display:flex; align-items:center; gap:10px; margin:18px 0; opacity:.5; }
   .landing-line span{ flex:1; height:1px; background:var(--border); }
   .landing-line p{ font-size:11px; letter-spacing:1.5px; text-transform:uppercase; }
@@ -458,7 +463,10 @@
     <div class="landing-actions">
       <button class="btn" onclick="goTo('access')">Accéder à mon espace</button>
       <div class="landing-line"><span></span><p>ou</p><span></span></div>
-      <button class="btn secondary" onclick="goTo('subscription')">S'abonner</button>
+      <div class="promo-wrap">
+        <button class="btn secondary" onclick="goTo('subscription')">S'abonner</button>
+        <span class="promo-bubble">1 an gratuit</span>
+      </div>
     </div>
   </div>
 
@@ -506,6 +514,15 @@
           </div>
           <div class="badge">-33%</div>
         </div>
+        <div class="plan" data-plan="2" onclick="selectPlan(2)">
+          <div class="radio"></div>
+          <div style="flex:1;">
+            <div class="plan-name">1 an gratuit</div>
+            <div class="plan-price">0€ pendant 12 mois</div>
+            <div class="plan-sub">Sans carte bancaire · un code d'accès par agence</div>
+          </div>
+          <div class="badge">OFFERT</div>
+        </div>
       </div>
 
       <div class="section-label">Paiement sécurisé</div>
@@ -550,6 +567,7 @@
         <p>L'accès est réservé aux professionnels de la location. L'Agence fournit la carte d'identité de son gérant et son numéro SIRET pour vérification. Loca'Track peut refuser ou suspendre un accès si ces éléments sont inexacts, incomplets ou frauduleux.</p>
         <h4>3. Abonnement et paiement</h4>
         <p>L'abonnement (mensuel ou annuel) est payable par Stripe et se renouvelle automatiquement chaque mois ou chaque année jusqu'à sa résiliation. Si un paiement n'est pas reçu, le compte de l'Agence est mis en pause jusqu'à régularisation. L'abonnement peut être résilié à tout moment depuis le profil de l'agence : la résiliation est immédiate, le code d'accès est désactivé et les paiements suivants sont annulés. La période déjà payée n'est pas remboursée : le mois en cours pour l'abonnement mensuel, l'année entière pour l'abonnement annuel.</p>
+        <p>Formule « 1 an gratuit » : l'Agence peut bénéficier d'un accès gratuit de 12 mois à compter de la génération de son code d'accès, une seule fois par n° SIRET, sans paiement ni carte bancaire. Le code d'accès est personnel et propre à l'Agence. L'accès prend fin automatiquement à l'issue des 12 mois : le code est alors désactivé, sans préavis et sans renouvellement automatique. Pour continuer à utiliser Loca'Track, l'Agence souscrit un abonnement payant (mensuel ou annuel) et conserve alors le même code d'accès et le même compte. Loca'Track peut refuser ou retirer l'année gratuite en cas de n° SIRET inexact, inexistant ou déjà utilisé.</p>
         <h4>4. Obligations de l'Agence</h4>
         <p>L'Agence s'engage à ne publier que des informations exactes, objectives et vérifiables, à ne pas utiliser la plateforme à des fins diffamatoires, discriminatoires ou étrangères à la prévention des impayés et des dégradations, et à garder confidentiel son code d'accès.</p>
         <h4>5. Clause obligatoire dans les contrats de location</h4>
@@ -633,7 +651,7 @@
       <button class="btn secondary" onclick="logout()" style="margin-top:10px;">Se déconnecter</button>
 
       <div class="section-label" style="margin-top:26px;">Abonnement</div>
-      <div class="hint" style="margin-top:0;">Votre abonnement se renouvelle automatiquement chaque mois ou chaque année. Si un paiement n'est pas reçu, votre compte est mis en pause. En cas de résiliation, la période en cours n'est pas remboursée.</div>
+      <div class="hint" id="profile-sub-hint" style="margin-top:0;">Votre abonnement se renouvelle automatiquement chaque mois ou chaque année. Si un paiement n'est pas reçu, votre compte est mis en pause. En cas de résiliation, la période en cours n'est pas remboursée.</div>
       <button class="btn danger" onclick="openCancelModal()">Résilier mon abonnement</button>
     </div>
   </div>
@@ -1078,6 +1096,7 @@ let reports = [];
 let reportsLoaded = false;
 let formPhotos = [];
 let selectedPlanIndex = 0;
+let renewCode = null; /* code de l'agence dont l'année gratuite est terminée (renouvellement : même compte) */
 let editingId = null;
 let deletingId = null;
 let submittingReport = false;
@@ -1119,6 +1138,8 @@ function goTo(name){
   document.getElementById('fab-home').classList.toggle('above-tabbar', name === 'app');
   if(name === 'app'){ renderHome(); }
   if(name === 'admin'){ renderAdmin(); }
+  if(name === 'landing'){ renewCode = null; }
+  if(name === 'subscription' || name === 'verify'){ applyRenewUi(); }
   if(name === 'subscription'){ updateStripeButtonLabel(); }
 }
 
@@ -1174,6 +1195,15 @@ document.addEventListener('click', function(e){
    ACCÈS ADHÉRENT
    ========================================================================= */
 async function enterApp(code, profile){
+  if(profile && profile.expired){
+    clearSession();
+    currentAccessCode = null; currentProfile = null;
+    goTo('landing');
+    renewCode = code;
+    goTo('subscription');
+    showToast("Votre année gratuite est terminée. Abonnez-vous : vous gardez le même code d'accès et le même compte.");
+    return;
+  }
   currentAccessCode = code;
   currentProfile = profile;
   saveSession(code);
@@ -1235,9 +1265,32 @@ async function restoreSession(){
 
 const PLAN_PRICES = {
   0: { amount:'29.90',  plan:'mensuel', label:"Abonnement mensuel Loca'Track" },
-  1: { amount:'239.88', plan:'annuel',  label:"Abonnement annuel Loca'Track" }
+  1: { amount:'239.88', plan:'annuel',  label:"Abonnement annuel Loca'Track" },
+  2: { amount:'0',      plan:'gratuit', label:"1 an gratuit Loca'Track" }
 };
 
+function applyRenewUi(){
+  const on = !!renewCode;
+  const sub = document.getElementById('view-subscription');
+  const h1 = sub.querySelector('h1'), pp = h1 ? h1.nextElementSibling : null;
+  if(h1 && pp){
+    if(h1._o === undefined){ h1._o = h1.textContent; pp._o = pp.textContent; }
+    h1.textContent = on ? 'Renouvelez votre accès' : h1._o;
+    pp.textContent = on ? "Votre année gratuite est terminée. Choisissez un abonnement : vous gardez le même code d'accès et le même compte." : pp._o;
+  }
+  const free = sub.querySelector('.plan[data-plan="2"]');
+  if(free) free.style.display = on ? 'none' : '';
+  if(on && selectedPlanIndex === 2) selectPlan(0);
+  /* Page de vérification : en renouvellement, l'agence est déjà vérifiée (seules les CGU restent) */
+  const ver = document.getElementById('view-verify');
+  const box = ver ? ver.children[1] : null;
+  if(box){
+    const kids = Array.from(box.children);
+    const cguIdx = kids.findIndex(el=>el.classList.contains('section-label') && /^Conditions/.test(el.textContent.trim()));
+    kids.forEach((el,i)=>{ if(i>0 && i<cguIdx) el.style.display = on ? 'none' : ''; });
+    if(kids[0]){ if(kids[0]._o === undefined) kids[0]._o = kids[0].textContent; kids[0].textContent = on ? 'Confirmez votre abonnement' : kids[0]._o; }
+  }
+}
 function selectPlan(i){
   selectedPlanIndex = i;
   document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));
@@ -1246,10 +1299,30 @@ function selectPlan(i){
 }
 function updateStripeButtonLabel(){
   const plan = PLAN_PRICES[selectedPlanIndex];
-  const amountEl = document.getElementById('stripe-pay-amount');
-  if(amountEl && plan) amountEl.textContent = plan.amount.replace('.',',')+'€';
-  const vEl = document.getElementById('verify-pay-amount');
-  if(vEl && plan) vEl.textContent = plan.amount.replace('.',',')+'€';
+  if(!plan) return;
+  const free = plan.plan === 'gratuit';
+  const amt = plan.amount.replace('.',',')+'€';
+  const payBtn = document.getElementById('stripe-pay-btn');
+  const vBtn = document.getElementById('verify-pay-btn');
+  /* Textes d'origine mémorisés une fois, pour revenir au paiement si on change de forfait */
+  if(payBtn && !payBtn._orig){ payBtn._orig = payBtn.nextElementSibling ? payBtn.nextElementSibling.innerHTML : ''; }
+  if(vBtn && !vBtn._origLabel){
+    vBtn._origLabel = vBtn.previousElementSibling ? vBtn.previousElementSibling.textContent : '';
+    vBtn._origHint = vBtn.nextElementSibling ? vBtn.nextElementSibling.innerHTML : '';
+  }
+  if(payBtn){
+    payBtn.innerHTML = free ? 'Continuer' : 'Payer <span id="stripe-pay-amount">'+amt+'</span>';
+    if(payBtn.nextElementSibling) payBtn.nextElementSibling.innerHTML = free
+      ? "Étape suivante : vérification de votre agence, puis génération de votre code d'accès gratuit."
+      : payBtn._orig;
+  }
+  if(vBtn){
+    vBtn.innerHTML = free ? "Générer mon code d'accès" : 'Payer <span id="verify-pay-amount">'+amt+'</span> avec Stripe';
+    if(vBtn.previousElementSibling) vBtn.previousElementSibling.textContent = free ? 'Accès gratuit' : vBtn._origLabel;
+    if(vBtn.nextElementSibling) vBtn.nextElementSibling.innerHTML = free
+      ? "100% gratuit pendant 1 an : aucun paiement, aucune carte bancaire. Un code d'accès personnel est généré pour votre agence. Au bout d'un an, ce code cesse de fonctionner et vous pourrez vous abonner pour continuer."
+      : vBtn._origHint;
+  }
 }
 
 /* =========================================================================
@@ -1265,6 +1338,9 @@ const STRIPE_LINKS = {
 };
 
 const PENDING_KEY = 'locatrack_pending_kyc';
+const RENEW_KEY = 'locatrack_renew';
+function loadRenew(plan){ try{ const r = JSON.parse(localStorage.getItem(RENEW_KEY) || 'null'); return (r && r.code && r.plan === plan && Date.now() - r.at < 86400000) ? r.code : null; }catch(e){ return null; } }
+function clearRenew(){ try{ localStorage.removeItem(RENEW_KEY); }catch(e){} }
 function loadPending(){ try{ return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); }catch(e){ return null; } }
 function clearPending(){ try{ localStorage.removeItem(PENDING_KEY); }catch(e){} }
 function onCguToggle(){
@@ -1274,14 +1350,24 @@ function onCguToggle(){
 }
 function startStripeCheckout(){
   const siret = (document.getElementById('v-siret').value || '').replace(/\D/g,'');
-  if(!idData.verify.recto || !idData.verify.verso){ showToast("Ajoutez le recto ET le verso de la carte d'identité du gérant."); return; }
-  if(siret.length !== 14){ showToast('Le n° SIRET doit comporter 14 chiffres.'); return; }
+  if(!renewCode && (!idData.verify.recto || !idData.verify.verso)){ showToast("Ajoutez le recto ET le verso de la carte d'identité du gérant."); return; }
+  if(!renewCode && siret.length !== 14){ showToast('Le n° SIRET doit comporter 14 chiffres.'); return; }
   const cgu = document.getElementById('cgu-accept');
   if(!cgu || !cgu.checked){
     document.getElementById('cgu-check-label').classList.add('field-error');
     showToast("Vous devez accepter les conditions générales d'utilisation pour payer.");
     return;
   }
+  if(renewCode && PLAN_PRICES[selectedPlanIndex].plan !== 'gratuit'){
+    /* Renouvellement : on retient le code pour que Stripe, au retour, réactive CE compte (pas de nouveau code) */
+    try{ localStorage.setItem(RENEW_KEY, JSON.stringify({ code:renewCode, plan:PLAN_PRICES[selectedPlanIndex].plan, at:Date.now() })); }catch(e){}
+    const urlR = STRIPE_LINKS[PLAN_PRICES[selectedPlanIndex].plan];
+    if(window.top !== window.self){ const w = window.open(urlR, '_blank'); if(!w) location.href = urlR; return; }
+    location.href = urlR;
+    return;
+  }
+  try{ localStorage.removeItem(RENEW_KEY); }catch(e){}
+  if(PLAN_PRICES[selectedPlanIndex].plan === 'gratuit'){ startFreeYear(siret); return; }
   try{
     localStorage.setItem(PENDING_KEY, JSON.stringify({ siret:siret, recto:idData.verify.recto, verso:idData.verify.verso, cguAcceptedAt:new Date().toISOString(), cguVersion:'2026-10' }));
   }catch(e){ showToast("Impossible de conserver vos documents sur cet appareil. Réessayez avec des photos plus légères."); return; }
@@ -1294,6 +1380,43 @@ function startStripeCheckout(){
   location.href = url;
 }
 
+/* 1 AN GRATUIT — le serveur crée un compte avec son propre code d'accès unique,
+   valable 1 an à partir d'aujourd'hui (un seul an gratuit par n° SIRET). */
+let freeYearBusy = false;
+async function startFreeYear(siret){
+  if(freeYearBusy) return;
+  freeYearBusy = true;
+  const btn = document.getElementById('verify-pay-btn');
+  if(btn) btn.disabled = true;
+  try{
+    const res = await fnCall('register-free-year', { siret: siret });
+    const code = res && res.code;
+    if(!code) throw new Error('no code');
+    currentAccessCode = code;
+    const recto = idData.verify.recto, verso = idData.verify.verso;
+    currentProfile = { agence:'', numero:siret, emplacement:'', contact:'', idRecto:recto || null, idVerso:verso || null, plan:'gratuit' };
+    reports = []; reportsLoaded = false;
+    saveSession(code);
+    try{
+      await rpc('update_agency', { p_code: code, p_agence:'', p_numero: siret, p_emplacement:'', p_contact:'', p_id_recto: recto, p_id_verso: verso });
+    }catch(e){ showToast("Documents non enregistrés : ils seront renvoyés quand vous enregistrerez votre profil."); }
+    document.getElementById('generated-code-display').value = code;
+    goTo('code');
+  }catch(e){
+    const m = (e && e.message) || '';
+    if(m === 'already_used') showToast("L'année gratuite a déjà été utilisée avec ce n° SIRET. Choisissez un abonnement.");
+    else if(m === 'siret_not_found') showToast("Ce n° SIRET n'existe pas dans l'annuaire officiel des entreprises. Vérifiez-le.");
+    else if(m === 'siret_closed') showToast("Ce n° SIRET correspond à un établissement fermé. Saisissez le SIRET de votre agence en activité.");
+    else if(m === 'invalid_siret') showToast('Le n° SIRET doit comporter 14 chiffres.');
+    else if(m === 'verification_unavailable') showToast("La vérification du SIRET est momentanément indisponible. Réessayez dans un instant.");
+    else dbError(e);
+  }finally{
+    freeYearBusy = false;
+    const cg = document.getElementById('cgu-accept');
+    if(btn) btn.disabled = !(cg && cg.checked);
+  }
+}
+
 /* Retour de Stripe : création du compte agence */
 async function handleStripeReturn(){
   const q = new URLSearchParams(location.search);
@@ -1302,8 +1425,27 @@ async function handleStripeReturn(){
   history.replaceState(null, '', location.pathname);
   if(!sessionId){ showToast("Paiement non vérifié : aucun compte n'a été créé. Contactez l'assistance si vous avez été débité."); return false; }
   selectedPlanIndex = plan === 'annuel' ? 1 : 0;
+  const rn = loadRenew(plan);
+  if(rn){ await completeRenewal(sessionId, rn); return true; }
   await completeSubscription(sessionId);
   return true;
+}
+
+/* Fin de l'année gratuite : le serveur vérifie le paiement auprès de Stripe puis réactive le MÊME compte (même code). */
+async function completeRenewal(sessionId, code){
+  try{
+    await fnCall('stripe-register', { session_id: sessionId, renew_code: code });
+    clearRenew(); renewCode = null;
+    const profile = await rpc('login_agency', { p_code: code });
+    if(profile && !profile.expired){
+      await enterApp(code, profile);
+      showToast("Abonnement activé. Vous gardez le même code d'accès et le même compte.");
+    } else { goTo('access'); showToast("Abonnement activé. Connectez-vous avec votre code habituel."); }
+  }catch(e){
+    dbError(e);
+    try{ alert("Le renouvellement n'a pas pu être finalisé. Si vous avez été débité, contactez l'assistance avec votre code d'accès.\n\n" + (e && e.message ? e.message : e)); }catch(_){}
+    goTo('landing');
+  }
 }
 
 /* Après paiement, le compte agence et son code d'accès sont créés et
@@ -1349,6 +1491,14 @@ function openProfileView(){
   idData.profile.recto = safeImg(p.idRecto) || null;
   idData.profile.verso = safeImg(p.idVerso) || null;
   document.getElementById('p-siret').value = p.numero || '';
+  const _sh = document.getElementById('profile-sub-hint');
+  if(_sh){
+    if(!_sh._orig) _sh._orig = _sh.textContent;
+    if(p.plan === 'gratuit' && p.paidUntil){
+      const _d = new Date(p.paidUntil);
+      _sh.textContent = "Votre année gratuite est valable jusqu'au " + _d.toLocaleDateString('fr-FR') + ". À cette date, votre code d'accès cessera de fonctionner : vous pourrez alors vous abonner pour continuer.";
+    } else { _sh.textContent = _sh._orig; }
+  }
   renderAvatarPick();
   renderIdSlot('profile','recto');
   renderIdSlot('profile','verso');
@@ -2211,9 +2361,16 @@ async function confirmAgencyAction(){
 
 function planLabel(a){
   if(!a.plan) return 'Sans paiement';
+  if(a.plan === 'gratuit'){
+    let g = 'Gratuit 1 an';
+    if(a.subStatus === 'canceled') g += ' · Résilié';
+    else if(a.expired) g += ' · EXPIRÉ le ' + fmtDate(a.paidUntil);
+    else g += ' · expire le ' + fmtDate(a.paidUntil);
+    return g;
+  }
   const name = a.plan === 'annuel' ? 'Annuel' : (a.plan === 'mensuel' ? 'Mensuel' : 'Offert');
   const via = a.method === 'stripe' ? 'Stripe' : (a.method === 'paypal' ? 'PayPal' : (a.method === 'card' ? 'Carte' : 'Manuel'));
-  let label = name + ' · ' + via;
+  let label = name + (a.hadFree ? ' (ex-gratuit)' : '') + ' · ' + via;
   if(a.subStatus === 'paused') label += ' · EN PAUSE (paiement non reçu)';
   else if(a.subStatus === 'canceled') label += ' · Résilié';
   else if(a.paidUntil) label += ' · payé jusqu\'au ' + a.paidUntil;
@@ -2241,8 +2398,10 @@ function adminAgencyCard(a, clickable){
     +'<div class="mini-name">'+esc(a.agence || 'Profil non renseigné')+(a.numero ? ' · '+esc(a.numero) : '')+'</div>'
     +'<div class="mini-sub">Code : '+esc(a.accessCode)+'</div>'
     +'<div class="mini-sub" style="font-weight:700;">'+plural(s.total,'signalement','signalements')+' · '+s.rejected+' rejeté(s)'+(s.sanction ? ' · sanction active' : '')+'</div>'
-    +'<div class="mini-sub">'+esc(planLabel(a))+' · inscrite le '+fmtDate(a.createdAt)+'</div>'
+    +'<div class="mini-sub">'+esc(planLabel(a))+' · '+(a.plan === 'gratuit' ? 'souscrit le ' : 'inscrite le ')+fmtDate(a.createdAt)+'</div>'
     +(a.revoked ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">Code d\'accès radié</div>' : '')
+    +(a.siretName ? '<div class="mini-sub">SIRET vérifié : '+esc(a.siretName)+'</div>' : '')
+    +(a.expired ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">Année gratuite terminée · code désactivé · doit s\'abonner</div>' : '')
     +(a.emplacement ? '<div class="mini-sub">'+esc(a.emplacement)+'</div>' : '')
     +(a.contact ? '<div class="mini-sub">'+esc(a.contact)+'</div>' : '')
     +'</div></div></div>';
@@ -2342,7 +2501,11 @@ function renderAdminList(){
   const agencesHtml = filtered.map(a=>adminAgencyCard(a, true)).join('')
     || '<p>'+(q ? 'Aucune agence ne correspond à votre recherche.' : 'Aucune agence enregistrée.')+'</p>';
 
-  let html = '<div class="section-label" style="margin-top:8px;">Agences adhérentes ('+filtered.length+')</div>' + agencesHtml;
+  const _n = (f)=>adminAgencies.filter(f).length;
+  const _recap = 'Mensuel : '+_n(a=>a.plan==='mensuel')+' · Annuel : '+_n(a=>a.plan==='annuel')
+    +' · 1 an gratuit : '+_n(a=>a.plan==='gratuit' && !a.expired)+' · Gratuit expiré : '+_n(a=>a.plan==='gratuit' && a.expired);
+  let html = '<div class="section-label" style="margin-top:8px;">Agences adhérentes ('+filtered.length+')</div>'
+    + '<div class="mini-sub" style="margin:0 2px 10px; font-weight:700;">'+_recap+'</div>' + agencesHtml;
   if(!q){
     html += '<div class="section-label">Signalements ('+adminReports.length+')</div>'
       + (adminReports.map(r=>adminReportRow(r, false)).join('')
