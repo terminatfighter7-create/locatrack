@@ -13,7 +13,7 @@
     --surface:#fffaf0; --surface-2:#f1e7d3; --surface-3:#e7dbc2;
     --primary:#ff7a1a; --primary-light:#ffa15c; --primary-dark:#c9520a;
     --danger:#d63a4c; --success:#1f9d62; --warn:#d9962a;
-    --text:#2b2218; --text-2:#6f6354; --text-3:#9a8c78; --border:#e0d3b8;
+    --text:#2b2218; --text-2:#4d4234; --text-3:#6b5e4b; --border:#e0d3b8;
     --radius-lg:22px; --radius-md:16px; --radius-sm:11px;
   }
    *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
@@ -121,13 +121,15 @@
     transform:translateY(-320px); opacity:0;
     animation:dropIn 1.1s cubic-bezier(.17,.89,.32,1.28) forwards;
   }
+  div#view-landing.view{ padding-top:calc(44px + env(safe-area-inset-top,0px)); }
+  .landing-logo{ display:block; width:min(260px,68vw); height:auto; margin:0 auto; }
   .brand-drop .lo{ color:var(--primary); text-shadow:0 0 30px rgba(255,122,26,.5); }
   .brand-drop .tr{ color:var(--text); }
   @keyframes dropIn{ 0%{transform:translateY(-320px); opacity:0;} 60%{transform:translateY(8px); opacity:1;} 80%{transform:translateY(-6px);} 100%{transform:translateY(0); opacity:1;} }
   .brand-sub{ margin-top:10px; color:var(--text-2); font-size:13px; letter-spacing:2px; text-transform:uppercase;
     opacity:0; animation:fadeUp .6s ease .9s forwards; }
   @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .landing-actions{ width:100%; margin-top:48px; display:flex; flex-direction:column; gap:12px;
+  .landing-actions{ width:100%; margin-top:30px; display:flex; flex-direction:column; gap:12px;
     opacity:0; animation:fadeUp .6s ease 1.15s forwards; }
   .promo-wrap{ position:relative; width:100%; }
   .promo-bubble{ position:absolute; top:-13px; right:-3px; z-index:2; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:900;
@@ -187,12 +189,27 @@
     padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px)); flex-shrink:0;
   }
   .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px 0; cursor:pointer;
-    color:var(--text-3); transition:color .2s ease, transform .15s ease; }
+    color:#b5a78f; transition:color .2s ease, transform .15s ease; }
   .tab.active{ color:var(--primary); }
   .tab:active{ transform:scale(.9); }
   .tab span{ font-size:10.5px; font-weight:700; letter-spacing:.2px; }
   .tab .dot{ width:4px; height:4px; border-radius:50%; background:var(--primary); opacity:0; transition:opacity .2s ease; }
   .tab.active .dot{ opacity:1; }
+
+  /* Abonnement en deux étapes : type de compte, puis offres */
+  @keyframes offersIn{ from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:none;} }
+  #offers-wrap.reveal{ animation:offersIn .3s ease; }
+  .type-chip{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:11px 14px; margin:6px 0 4px;
+    border-radius:14px; background:var(--surface); border:1px solid rgba(0,0,0,.12); font-size:13px; color:var(--text-2); }
+  .type-chip b{ color:var(--text); }
+  .type-chip a{ color:var(--primary-dark); font-weight:800; cursor:pointer; }
+
+  /* Bandeau d'abonnement (accueil) */
+  .sub-banner{ display:flex; gap:12px; align-items:flex-start; padding:14px; margin:-6px 0 18px; border-radius:16px;
+    background:rgba(255,122,26,.12); border:1px solid rgba(201,82,10,.55); }
+  .sub-banner-ic{ width:34px; height:34px; border-radius:10px; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--primary-dark); flex-shrink:0; }
+  .sub-banner-title{ font-weight:800; font-size:13.5px; color:var(--text); }
+  .sub-banner-text{ font-size:12.5px; line-height:1.5; color:var(--text-2); margin-top:3px; }
 
   /* Home dashboard */
   .home-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
@@ -462,8 +479,7 @@
 
   <!-- ============ LANDING ============ -->
   <div class="view active" id="view-landing">
-    <div class="brand-drop"><span class="lo">Immo</span><span class="tr">Track</span></div>
-    <div class="brand-sub">Le réseau des bailleurs vigilants</div>
+    <div class="brand-drop"><img class="landing-logo" alt="Immo'Track — Réseau de Confiance Locative" src="data:image/png;base64,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"></div>
     <div class="landing-actions">
       <button class="btn" onclick="goTo('access')">Accéder à mon espace</button>
       <div class="landing-line"><span></span><p>ou</p><span></span></div>
@@ -505,10 +521,13 @@
       <div class="feature"><div class="ic-wrap"></div><div>Signaler un locataire problématique</div></div>
       <div class="feature"><div class="ic-wrap"></div><div>Rechercher un profil avant une location</div></div>
       <div class="feature"><div class="ic-wrap"></div><div>Base mutualisée entre adhérents : professionnels et particuliers</div></div>
-      <div id="type-wrap"><div class="section-label" style="margin-top:6px;">Vous êtes</div>
-        <div class="plan selected" data-type="pro" onclick="selectType('pro')"><div class="radio"></div><div style="flex:1;"><div class="plan-name">Professionnel</div><div class="plan-sub">Agence, conciergerie, administrateur de biens…</div></div></div>
+      <div id="type-wrap"><div class="section-label" style="margin-top:6px;">Étape 1 sur 2 · Vous êtes</div>
+        <div class="plan" data-type="pro" onclick="selectType('pro')"><div class="radio"></div><div style="flex:1;"><div class="plan-name">Professionnel</div><div class="plan-sub">Agence, conciergerie, administrateur de biens…</div></div></div>
         <div class="plan" data-type="particulier" onclick="selectType('particulier')"><div class="radio"></div><div style="flex:1;"><div class="plan-name">Particulier</div><div class="plan-sub">Je loue mon propre bien</div></div></div></div>
-      <div style="margin-top:26px;">
+      <div id="offers-wrap" style="display:none;">
+      <div id="type-chip" class="type-chip"><span>Vous êtes : <b id="type-chip-label">Professionnel</b></span><a onclick="changeType()">Modifier</a></div>
+      <div class="section-label" id="offers-step" style="margin-top:6px;">Étape 2 sur 2 · Choisissez votre offre</div>
+      <div style="margin-top:12px;">
         <div class="plan selected" data-plan="0" onclick="selectPlan(0)">
           <div class="radio"></div>
           <div style="flex:1;">
@@ -526,6 +545,15 @@
           </div>
           <div class="badge">-33%</div>
         </div>
+        <div class="plan" data-plan="3" onclick="selectPlan(3)">
+          <div class="radio"></div>
+          <div style="flex:1;">
+            <div class="plan-name">1 semaine</div>
+            <div class="plan-price">6,99€ · paiement unique</div>
+            <div class="plan-sub">Particuliers · idéal pour vérifier les candidats locataires sans payer un mois complet</div>
+          </div>
+          <div class="badge">Particulier</div>
+        </div>
         <div class="plan" data-plan="2" onclick="selectPlan(2)">
           <div class="radio"></div>
           <div style="flex:1;">
@@ -539,7 +567,8 @@
 
       <div class="section-label">Paiement sécurisé</div>
       <button class="btn" onclick="goTo('verify')" id="stripe-pay-btn">Payer <span id="stripe-pay-amount">29,90€</span></button>
-      <div class="hint" style="text-align:center;">Étape suivante : vérification de votre identité, puis paiement (simulé en local).</div>
+      <div class="hint" style="text-align:center;">Étape suivante : vérification de votre identité, puis paiement sécurisé par Stripe.</div>
+      </div>
     </div>
   </div>
 
@@ -575,8 +604,6 @@
       </div>
       <div class="field" id="v-siret-wrap"><label>N° SIRET (14 chiffres)</label>
         <input type="text" id="v-siret" inputmode="numeric" maxlength="17" placeholder="123 456 789 00012" autocomplete="off"></div>
-      <div class="field" id="v-addr-wrap" style="display:none;"><label>Adresse du bien loué</label>
-        <input type="text" id="v-addr" placeholder="Adresse complète" autocomplete="off"></div>
       <div class="section-label">Conditions générales d'utilisation</div>
       <div class="cgu-alert" role="alert">
         <div class="cgu-alert-title">Mention obligatoire — à lire avant de payer</div>
@@ -590,6 +617,7 @@
         <h4>3. Abonnement et paiement</h4>
         <p>L'abonnement (mensuel ou annuel) est payable par Stripe et se renouvelle automatiquement chaque mois ou chaque année jusqu'à sa résiliation. Si un paiement n'est pas reçu, le compte de l'Agence est mis en pause jusqu'à régularisation. L'abonnement peut être résilié à tout moment depuis le profil de l'adhérent : la résiliation est immédiate, le code d'accès est désactivé et les paiements suivants sont annulés. La période déjà payée n'est pas remboursée : le mois en cours pour l'abonnement mensuel, l'année entière pour l'abonnement annuel.</p>
         <p>Formule « 1 an gratuit » : l'Agence peut bénéficier d'un accès gratuit de 12 mois à compter de la génération de son code d'accès, une seule fois par n° SIRET, par titulaire de pièce d'identité et par bien loué, sans paiement ni carte bancaire. Le code d'accès est personnel et propre à l'Agence. L'accès prend fin automatiquement à l'issue des 12 mois : le code est alors désactivé, sans préavis et sans renouvellement automatique. Pour continuer à utiliser Immo'Track, l'Agence souscrit un abonnement payant (mensuel ou annuel) et conserve alors le même code d'accès et le même compte. Immo'Track peut refuser ou retirer l'année gratuite en cas de n° SIRET, d'identité ou de bien inexact, inexistant ou déjà utilisé, ou de tentative de création de comptes multiples.</p>
+        <p>Forfait « 1 semaine » (particuliers uniquement) : accès de 7 jours à compter du paiement, pour 6,99 €, sans renouvellement automatique. Le code d'accès expire automatiquement à l'issue des 7 jours, sans préavis ; le particulier peut alors souscrire un abonnement mensuel ou annuel en conservant le même code d'accès et le même compte. La période payée n'est pas remboursée.</p>
         <h4>4. Obligations de l'Agence</h4>
         <p>L'Agence s'engage à ne publier que des informations exactes, objectives et vérifiables, à ne pas utiliser la plateforme à des fins diffamatoires, discriminatoires ou étrangères à la prévention des impayés et des dégradations, à ne mentionner dans la description aucune information sur la santé, l'origine, la religion ou la vie privée, ni sur des tiers, et à garder confidentiel son code d'accès.</p>
         <h4>5. Clause obligatoire dans les contrats de location</h4>
@@ -610,7 +638,7 @@
       </label>
       <div class="section-label">Paiement sécurisé</div>
       <button class="btn" id="verify-pay-btn" disabled onclick="startStripeCheckout()">Payer <span id="verify-pay-amount">29,90€</span></button>
-      <div class="hint" style="text-align:center;">Paiement simulé en local : aucun paiement réel n'est effectué.<br>Abonnement à renouvellement automatique, résiliable à tout moment depuis votre profil. La période en cours n'est jamais remboursée. Si un paiement n'est pas reçu, votre compte est mis en pause.</div>
+      <div class="hint" style="text-align:center;">Paiement sécurisé par Stripe : vos coordonnées bancaires ne transitent jamais par Immo'Track.<br>Abonnement à renouvellement automatique, résiliable à tout moment depuis votre profil. La période en cours n'est jamais remboursée. Si un paiement n'est pas reçu, votre compte est mis en pause.</div>
     </div>
   </div>
 
@@ -700,6 +728,8 @@
           <div class="agency-chip-edit-hint" id="agency-edit-ic"></div>
         </div>
 
+        <div class="sub-banner" id="sub-banner" role="status" style="display:none;"></div>
+
         <div class="stat-row">
           <div class="stat-card">
             <div class="stat-num" id="stat-total">0</div>
@@ -752,10 +782,7 @@
           <div class="gauge" id="gauge"></div>
           <div class="gauge-caption" id="gauge-caption">Sélectionnez un niveau de gravité.</div>
         </div>
-        <div class="field-row2">
-          <div class="field"><label>Date du sinistre</label><input type="date" id="f-sinistre"></div>
-          <div class="field"><label>Commune / type de logement</label><input type="text" id="f-vehicule" placeholder="Sans adresse précise"></div>
-        </div>
+        <div class="field"><label>Date du sinistre</label><input type="date" id="f-sinistre"></div>
         <div class="field" id="f-prejudice-wrap"><label>Montant du préjudice à rembourser (€)</label>
           <input type="text" id="f-prejudice" inputmode="decimal" placeholder="Ex : 850" autocomplete="off">
           <div class="hint" style="margin:6px 0 0;">À renseigner uniquement si le locataire doit vous rembourser un préjudice (dégâts, impayé…). Laissez vide sinon.</div>
@@ -820,27 +847,60 @@
     <div class="top-nav"><div class="icon-btn" onclick="closeLegal()"></div><div class="top-title">Confidentialité</div></div>
     <div class="legal-doc" style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
       <h1>Politique de confidentialité</h1>
-      <p class="hint">Les éléments surlignés <span class="todo">[entre crochets]</span> sont à compléter avant toute mise en ligne.</p>
-      <h3>1. Responsable de traitement</h3>
-      <p>Immo'Track, <span class="todo">[raison sociale, forme juridique, SIRET, adresse du siège]</span>. Contact pour toute réclamation ou demande relative aux données personnelles : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
-      <h3>2. Données et finalités</h3>
+      <p class="hint">Dernière mise à jour : 11 octobre 2026.</p>
+
+      <h3>1. Qui est responsable de vos données ?</h3>
+      <p>Le responsable de traitement est l'éditeur d'Immo'Track, Aucun. Pour toute question, demande d'exercice de vos droits ou réclamation relative aux données personnelles : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
+      <p>Immo'Track est un réseau de confiance locative : des bailleurs (professionnels et particuliers) y signalent les incidents survenus avec un locataire (impayés, dégradations, etc.) et y vérifient le profil d'un candidat avant de louer. Le service est réservé aux personnes majeures.</p>
+
+      <h3>2. Quelles données, pourquoi et sur quelle base légale ?</h3>
       <ul>
-        <li><b>Comptes adhérents et abonnements</b> (exécution du contrat) : nom, prénom, n° SIRET ou adresse du bien, coordonnées, pièce d'identité du gérant ou du bailleur (recto/verso), date de naissance et n° de pièce, utilisés uniquement pour vérifier l'accès et éviter les comptes multiples. La pièce d'identité n'est consultable que par l'administration d'Immo'Track. Les données de paiement sont traitées par notre prestataire de paiement.</li>
-        <li><b>Prévention des impayés et dégradations entre bailleurs</b> (intérêt légitime) : nom, prénom, date de naissance, n° de pièce d'identité, type et date du manquement, indicateur de gravité renseigné par l'adhérent, commune ou type de logement, montant éventuel, description, photos. Les signalements sont visibles des adhérents authentifiés dès leur enregistrement.</li>
-        <li><b>Lutte contre la fraude</b> (intérêt légitime) : empreintes irréversibles (hachées) de l'identité, du n° SIRET ou de l'adresse du bien, conservées 24 mois.</li>
+        <li><b>Compte adhérent et abonnement</b> (exécution du contrat) : nom, prénom, date de naissance, n° de pièce d'identité, recto et verso de la carte d'identité du gérant (professionnel) ou du bailleur (particulier), n° SIRET pour les professionnels, nom de l'agence, emplacement, contact, photo de profil facultative, formule choisie et dates de validité, adresse e-mail de facturation. Les particuliers ne fournissent aucune adresse. Ces éléments servent uniquement à vérifier l'accès, éviter les comptes multiples et gérer l'abonnement. La carte d'identité de l'adhérent n'est consultable que par l'administration d'Immo'Track.</li>
+        <li><b>Paiement</b> (exécution du contrat) : le paiement est traité par Stripe sur sa propre page sécurisée. Immo'Track ne reçoit ni ne conserve votre numéro de carte bancaire ; nous conservons uniquement les identifiants client et abonnement Stripe, l'adresse e-mail de facturation et les dates de paiement.</li>
+        <li><b>Signalements entre bailleurs</b> (intérêt légitime : prévenir les impayés et les dégradations) : concernant le locataire, nom, prénom, date de naissance, n° de pièce d'identité, nature et date du manquement, indicateur de gravité, montant du préjudice éventuel, description des faits, photos et, si l'adhérent la joint, la carte d'identité (recto/verso), ainsi que la date de régularisation le cas échéant. Concernant l'auteur : son agence ou nom d'affichage. Les signalements sont visibles par les adhérents authentifiés dès leur enregistrement ; les photos jointes sont consultables par les adhérents authentifiés qui ouvrent le dossier. La carte d'identité du locataire, lorsqu'elle est jointe, n'est accessible qu'à l'adhérent auteur du signalement et à l'administration d'Immo'Track : les autres adhérents n'y ont pas accès.</li>
+        <li><b>Lutte contre la fraude</b> (intérêt légitime) : pour refuser la création d'un second compte par la même personne ou la même structure, nous conservons des clés techniques dérivées du n° de pièce d'identité, du nom, du prénom et de la date de naissance, et du n° SIRET pour les professionnels. Elles ne servent à aucune autre finalité.</li>
+        <li><b>Sécurité</b> (intérêt légitime) : l'adresse IP est utilisée pour limiter les tentatives de connexion répétées (blocage temporaire de 15 minutes après 15 échecs) et conservée le temps strictement nécessaire à cette protection.</li>
+        <li><b>Vérification du SIRET</b> (intérêt légitime) : le n° SIRET saisi est contrôlé auprès de l'annuaire public des entreprises (recherche-entreprises.api.gouv.fr). Seul ce numéro est transmis.</li>
       </ul>
+
       <h3>3. Information des locataires</h3>
-      <p>Les locataires sont informés par l'agence ou le bailleur qui effectue le signalement, au moyen d'une clause de leur contrat de location renvoyant vers le contact de réclamation ci-dessus.</p>
-      <h3>4. Durées de conservation</h3>
-      <p>Signalements : 3 ans au plus tard après leur création, et 12 mois après leur régularisation. Comptes résiliés ou année gratuite terminée : suppression après 12 mois. Empreintes anti-fraude : 24 mois. Pièces comptables : durée légale.</p>
+      <p>Les locataires sont informés par l'agence ou le bailleur qui effectue le signalement, au moyen d'une clause de leur contrat de location qui renvoie vers le contact de réclamation indiqué ci-dessus. Chaque adhérent s'engage à insérer cette clause dans ses contrats et reste seul responsable de l'exactitude des faits qu'il signale. Un locataire peut à tout moment demander l'accès, la rectification ou l'effacement des informations qui le concernent.</p>
+
+      <h3>4. Combien de temps conservons-nous les données ?</h3>
+      <ul>
+        <li><b>Signalements</b> : supprimés au plus tard 3 ans après leur création, et 12 mois après leur régularisation si elle intervient avant.</li>
+        <li><b>Comptes résiliés ou année gratuite terminée</b> : suppression 12 mois après la résiliation ou la fin de l'accès.</li>
+        <li><b>Forfait 1 semaine</b> : à la fin de la semaine, un abonnement mensuel ou annuel est proposé avec le même code d'accès. Sans réabonnement, le compte et les données personnelles associées (identité, carte d'identité, clés anti-fraude) sont supprimés 7 jours après la fin du forfait.</li>
+        <li><b>Abonnement mensuel ou annuel arrivé à échéance</b> : le compte est mis en pause et conservé pour permettre sa réactivation avec le même code d'accès, et supprimé à votre demande.</li>
+        <li><b>Clés anti-fraude</b> : 24 mois.</li>
+        <li><b>Inscriptions en attente de paiement</b> : 7 jours.</li>
+        <li><b>Pièces comptables et justificatifs de paiement</b> : durée légale (10 ans).</li>
+      </ul>
+
       <h3>5. Décisions automatisées</h3>
-      <p>Immo'Track ne prend aucune décision automatisée. L'indicateur de gravité est saisi par l'adhérent auteur du signalement ; la décision de louer appartient au bailleur.</p>
-      <h3>6. Destinataires et sous-traitants</h3>
-      <p>Adhérents authentifiés (signalements), administration d'Immo'Track (pièces d'identité), et prestataires techniques : hébergement <span class="todo">[nom, pays]</span> ; paiement (Stripe) <span class="todo">[rôle et garanties de transfert à préciser]</span>.</p>
+      <p>Immo'Track ne prend aucune décision automatisée concernant les locataires : l'indicateur de gravité est saisi par l'adhérent auteur du signalement, et la décision de louer appartient au bailleur. Concernant les adhérents, le nombre de signalements rejetés par l'administration réduit automatiquement la limite quotidienne de signalements, jusqu'à la suspension de la possibilité de signaler en cas de rejets répétés. Vous pouvez contester ces mesures en nous contactant.</p>
+
+      <h3>6. Qui a accès à vos données ?</h3>
+      <ul>
+        <li>Les adhérents authentifiés (signalements, photos et pièces jointes) ;</li>
+        <li>L'administration d'Immo'Track (cartes d'identité des adhérents et des locataires, modération) ;</li>
+        <li><b>Supabase</b> (base de données et fonctions serveur), sous-traitant, hébergé en Europe (région de Paris, infrastructure Amazon Web Services) ;</li>
+        <li><b>Stripe Payments Europe, Ltd</b> (paiement, Irlande), qui agit en son nom propre pour les obligations liées au paiement ; d'éventuels transferts hors Union européenne sont encadrés par les mécanismes prévus par le RGPD (clauses contractuelles types ou cadre de protection des données UE-États-Unis) ;</li>
+        <li><b>GitHub, Inc.</b> (GitHub Pages, États-Unis), hébergeur du site, pour la diffusion des pages ; d'éventuels transferts hors Union européenne sont encadrés par les mécanismes prévus par le RGPD.</li>
+      </ul>
+      <p>Vos données ne sont ni vendues ni utilisées à des fins publicitaires.</p>
+
       <h3>7. Vos droits</h3>
-      <p>Accès, rectification, effacement, opposition, limitation : contactez-nous sur Telegram <a onclick="openTelegram()">t.me/aucunn</a>. Vous pouvez aussi saisir la CNIL (www.cnil.fr).</p>
-      <h3>8. Stockage dans votre navigateur</h3>
-      <p>Ce site n'utilise que le stockage local nécessaire à son fonctionnement (session, limite quotidienne), sans traceur publicitaire ni mesure d'audience.</p>
+      <p>Vous disposez des droits d'accès, de rectification, d'effacement, d'opposition, de limitation et, pour les données traitées dans le cadre du contrat, de portabilité. Pour les exercer, contactez-nous sur Telegram <a onclick="openTelegram()">t.me/aucunn</a> ; nous répondons dans un délai d'un mois et pouvons vous demander un justificatif d'identité pour protéger vos données. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (www.cnil.fr).</p>
+
+      <h3>8. Sécurité</h3>
+      <p>Les échanges sont chiffrés (HTTPS). L'accès au service se fait par code d'accès personnel, les contrôles sont réalisés côté serveur, la consultation des cartes d'identité est réservée à l'administration (et, pour la carte d'un locataire, à l'adhérent qui l'a jointe), et les tentatives de connexion répétées sont bloquées temporairement.</p>
+
+      <h3>9. Stockage dans votre navigateur</h3>
+      <p>Ce site n'utilise que le stockage local nécessaire à son fonctionnement (maintien de votre session, thème d'affichage), sans traceur publicitaire ni mesure d'audience. Lors du paiement, Stripe peut déposer ses propres cookies techniques sur sa page, selon sa propre politique.</p>
+
+      <h3>10. Modifications</h3>
+      <p>Cette politique peut évoluer ; la date de dernière mise à jour figure en haut de la page.</p>
     </div>
   </div>
 
@@ -849,14 +909,32 @@
     <div class="top-nav"><div class="icon-btn" onclick="closeLegal()"></div><div class="top-title">Mentions légales</div></div>
     <div class="legal-doc" style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
       <h1>Mentions légales</h1>
-      <h3>Éditeur</h3>
-      <p>Immo'Track — <span class="todo">[raison sociale, forme juridique, capital, SIRET / RCS, adresse, e-mail, téléphone]</span></p>
-      <h3>Directeur de la publication</h3>
-      <p><span class="todo">[nom et prénom]</span></p>
-      <h3>Hébergeur</h3>
-      <p><span class="todo">[nom, adresse et téléphone de l'hébergeur]</span></p>
+      <p class="hint">Dernière mise à jour : 11 octobre 2026.</p>
+
+      <h3>Éditeur du site</h3>
+      <p>Immo'Track — Réseau de Confiance Locative.<br>Éditeur : Aucun.<br>Contact : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
+
+      <h3>Hébergement</h3>
+      <p><b>Données et fonctions serveur</b> : Supabase Inc., infrastructure Amazon Web Services, région Europe (Paris).<br>
+      <b>Site</b> : GitHub, Inc. (GitHub Pages), 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+
+      <h3>Nature du service</h3>
+      <p>Immo'Track met en relation des bailleurs (professionnels et particuliers) afin qu'ils partagent des informations de prévention des impayés et des dégradations. L'accès est réservé aux adhérents majeurs, vérifiés à l'inscription, et fonctionne sur abonnement (mensuel, annuel, forfait 1 semaine pour les particuliers) ou pendant une année gratuite. Les paiements sont traités par Stripe.</p>
+
+      <h3>Responsabilité des signalements</h3>
+      <p>Chaque signalement est rédigé sous la seule responsabilité de l'adhérent qui le publie, qui garantit l'exactitude des faits et l'information préalable du locataire. Immo'Track n'est pas partie aux contrats de location, ne vérifie pas les faits avant publication et peut rejeter, modifier ou supprimer tout signalement inexact, abusif ou contraire à la loi. Aucun signalement ne constitue une décision de refus de location : la décision appartient au bailleur.</p>
+
+      <h3>Propriété intellectuelle</h3>
+      <p>Le nom, le logo, la charte graphique, les textes et le code du site sont la propriété de l'éditeur. Toute reproduction ou extraction, même partielle, des contenus et de la base de signalements, sans autorisation écrite, est interdite.</p>
+
+      <h3>Données personnelles</h3>
+      <p>Le traitement des données personnelles est décrit dans la <a onclick="openLegal('privacy')">politique de confidentialité</a>.</p>
+
       <h3>Contact et réclamations</h3>
-      <p>Telegram : <a onclick="openTelegram()">t.me/aucunn</a>. Voir aussi la <a onclick="openLegal('privacy')">politique de confidentialité</a>.</p>
+      <p>Pour toute question, demande de retrait ou réclamation : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
+
+      <h3>Droit applicable</h3>
+      <p>Le site est soumis au droit français. À défaut de résolution amiable, les tribunaux français sont compétents.</p>
     </div>
   </div>
 
@@ -908,7 +986,7 @@
       <div class="modal-icon" style="color:var(--primary);"></div>
       <h3 id="rem-title"></h3>
       <p id="rem-text" style="margin-bottom:16px;"></p>
-      <button class="btn" onclick="remindSubscribe()">S'abonner pour continuer</button>
+      <button class="btn" id="rem-btn" onclick="remindSubscribe()">S'abonner pour continuer</button>
       <button class="btn secondary" onclick="remindLater()" style="margin-top:10px;">Plus tard</button>
     </div>
   </div>
@@ -934,7 +1012,6 @@
       <div class="field"><label>Prénom</label><input type="text" id="e-prenom"></div>
       <div class="field"><label>Type d'incident</label><select class="form-select" id="e-type"></select></div>
       <div class="field"><label>Gravité</label><select class="form-select" id="e-gravite"></select></div>
-      <div class="field"><label>Logement</label><input type="text" id="e-vehicule"></div>
       <div class="field"><label>Montant du préjudice (€)</label><input type="text" id="e-prejudice" inputmode="decimal" placeholder="Vide si aucun"></div>
       <div class="field"><label>Description</label><textarea id="e-description"></textarea></div>
       <div class="field">
@@ -1003,9 +1080,10 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-lightbox" onclick="closeLightboxBg(event)">
+  <div class="modal-overlay" id="modal-lightbox" style="flex-direction:column; gap:12px;" onclick="closeLightboxBg(event)">
     <div class="icon-btn" id="lightbox-close" style="position:absolute; top:20px; right:20px; z-index:2;" onclick="closeModal('modal-lightbox')"></div>
     <img id="lightbox-img" src="" style="max-width:100%; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6);">
+    <img id="lightbox-img2" src="" style="display:none; max-width:100%; max-height:42vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6);">
   </div>
 </div>
 
@@ -1058,7 +1136,11 @@ function fillIcons(){
 const SUPABASE_URL = 'https://jndnvvmjskezfvqphgdt.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZG52dm1qc2tlemZ2cXBoZ2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNTc4NTgsImV4cCI6MjEwNjkzMzg1OH0.09lpqiuQiCJqHQjRrIuQNziIaV2F5JV2HEacQL5H5Vw';
 const SB_HEAD = { apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY, 'Content-Type':'application/json' };
-const today10 = () => new Date().toISOString().slice(0,10);
+/* Dates « du jour » calculées en heure de Paris (et non en UTC) : évite le décalage
+   d'un jour entre minuit et 2 h du matin en France. */
+const TZ = 'Europe/Paris';
+const parisDate = d => new Date(d == null ? Date.now() : d).toLocaleDateString('en-CA', { timeZone:TZ });
+const today10 = () => parisDate();
 
 async function sbFetch(url, body){
   let r;
@@ -1190,6 +1272,8 @@ let myStats = null; /* statistiques et limite quotidienne, calculées par le ser
 let reportsLoaded = false;
 let formPhotos = [];
 let selectedPlanIndex = 0;
+let renewKind = 'gratuit'; /* forfait terminé qui déclenche le renouvellement : gratuit ou semaine */
+let typeChosen = false; /* étape 1 de l'abonnement : pro / particulier choisi ? */
 let renewCode = null; /* code de l'agence dont l'année gratuite est terminée (renouvellement : même compte) */
 let editingId = null;
 let deletingId = null;
@@ -1233,7 +1317,7 @@ function goTo(name){
   document.getElementById('fab-home').classList.toggle('above-tabbar', name === 'app');
   if(name === 'app'){ renderHome(); }
   if(name === 'admin'){ renderAdmin(); }
-  if(name === 'landing'){ renewCode = null; }
+  if(name === 'landing'){ renewCode = null; typeChosen = false; }
   if(name === 'subscription' || name === 'verify'){ applyRenewUi(); applyTypeUi(); }
   if(name === 'subscription'){ updateStripeButtonLabel(); }
 }
@@ -1289,14 +1373,30 @@ document.addEventListener('click', function(e){
 /* =========================================================================
    ACCÈS ADHÉRENT
    ========================================================================= */
+/* Garde-fou côté navigateur (le serveur reste la référence) : date de fin dépassée.
+   Gratuit / semaine : aucun délai. Mensuel / annuel : 1 jour de tolérance, comme le serveur (webhook Stripe, nouvel essai de paiement). */
+function isPastDue(p, graceDays){
+  if(!p || !p.paidUntil || !p.plan || p.subStatus === 'canceled') return false;
+  const t = Date.parse(p.paidUntil);
+  return !isNaN(t) && t + (graceDays || 0) * 864e5 < Date.now();
+}
 async function enterApp(code, profile){
+  if(profile){
+    if(!profile.expired && (profile.plan === 'gratuit' || profile.plan === 'semaine') && isPastDue(profile, 0)) profile.expired = true;
+    if(!profile.expired && !profile.paused && (profile.plan === 'mensuel' || profile.plan === 'annuel') && isPastDue(profile, 1)) profile.paused = true;
+  }
   if(profile && profile.expired){
     clearSession();
     currentAccessCode = null; currentProfile = null;
     goTo('landing');
     renewCode = code;
+    renewKind = profile.plan === 'semaine' ? 'semaine' : (profile.plan === 'mensuel' || profile.plan === 'annuel' ? 'paye' : 'gratuit');
     goTo('subscription');
-    showToast("Votre année gratuite est terminée. Abonnez-vous : vous gardez le même code d'accès et le même compte.");
+    showToast(renewKind === 'paye'
+      ? "Votre abonnement est arrivé à échéance et votre compte est en pause. Renouvelez-le : vous gardez le même code d'accès et le même compte."
+      : renewKind === 'semaine'
+      ? "Votre forfait 1 semaine est terminé. Passez à un abonnement mensuel ou annuel : vous gardez le même code d'accès et le même compte."
+      : "Votre année gratuite est terminée. Abonnez-vous : vous gardez le même code d'accès et le même compte.");
     return;
   }
   currentAccessCode = code;
@@ -1373,7 +1473,8 @@ async function restoreSession(){
 const PLAN_PRICES = {
   0: { amount:'29.90',  plan:'mensuel', label:"Abonnement mensuel Immo'Track" },
   1: { amount:'239.88', plan:'annuel',  label:"Abonnement annuel Immo'Track" },
-  2: { amount:'0',      plan:'gratuit', label:"1 an gratuit Immo'Track" }
+  2: { amount:'0',      plan:'gratuit', label:"1 an gratuit Immo'Track" },
+  3: { amount:'6.99',   plan:'semaine', label:"Forfait 1 semaine Immo'Track" }
 };
 
 function applyRenewUi(){
@@ -1383,7 +1484,13 @@ function applyRenewUi(){
   if(h1 && pp){
     if(h1._o === undefined){ h1._o = h1.textContent; pp._o = pp.textContent; }
     h1.textContent = on ? 'Renouvelez votre accès' : h1._o;
-    pp.textContent = on ? "Votre année gratuite est terminée. Choisissez un abonnement : vous gardez le même code d'accès et le même compte." : pp._o;
+    pp.textContent = on
+      ? (renewKind === 'paye'
+          ? "Votre abonnement est arrivé à échéance : votre compte est en pause. Choisissez un abonnement pour le réactiver : vous gardez le même code d'accès et le même compte."
+          : renewKind === 'semaine'
+          ? "Votre forfait 1 semaine est terminé. Choisissez un abonnement mensuel ou annuel : vous gardez le même code d'accès et le même compte."
+          : "Votre année gratuite est terminée. Choisissez un abonnement : vous gardez le même code d'accès et le même compte.")
+      : pp._o;
   }
   const free = sub.querySelector('.plan[data-plan="2"]');
   if(free) free.style.display = on ? 'none' : '';
@@ -1428,7 +1535,9 @@ function updateStripeButtonLabel(){
     if(vBtn.previousElementSibling) vBtn.previousElementSibling.textContent = free ? 'Accès gratuit' : vBtn._origLabel;
     if(vBtn.nextElementSibling) vBtn.nextElementSibling.innerHTML = free
       ? "100% gratuit pendant 1 an : aucun paiement, aucune carte bancaire. Un code d'accès personnel est généré pour vous. Au bout d'un an, ce code cesse de fonctionner et vous pourrez vous abonner pour continuer."
-      : vBtn._origHint;
+      : (plan.plan === 'semaine'
+          ? "Forfait 1 semaine : paiement unique de 6,99 €, sans renouvellement automatique. Votre code d'accès expire automatiquement au bout de 7 jours ; vous pourrez alors passer à un abonnement mensuel ou annuel en gardant le même code. La période en cours n'est jamais remboursée."
+          : vBtn._origHint);
   }
 }
 
@@ -1487,7 +1596,6 @@ async function startStripeCheckout(){
     if(!f.naissance || (Date.now() - Date.parse(f.naissance)) / 31557600000 < 18){ showToast('Date de naissance invalide : vous devez être majeur.'); return; }
     if(normPermis(f.idn).length < 5){ showToast("Le n° de pièce d'identité semble incomplet."); return; }
     if(f.type === 'pro' && !siretOk(f.siret)){ showToast("Ce n° SIRET n'est pas valide. Vérifiez-le (14 chiffres)."); return; }
-    if(f.type !== 'pro' && f.addr.length < 8){ showToast("Indiquez l'adresse complète du bien que vous louez."); return; }
   }
   if(!cgu || !cgu.checked){ document.getElementById('cgu-check-label').classList.add('field-error'); showToast("Vous devez accepter les conditions générales d'utilisation."); return; }
   ckBusy = true;
@@ -1571,8 +1679,11 @@ function openProfileView(){
   if(_sh){
     if(!_sh._orig) _sh._orig = _sh.textContent;
     if(p.plan === 'gratuit' && p.paidUntil){
-      const _d = new Date(p.paidUntil);
-      _sh.textContent = "Votre année gratuite est valable jusqu'au " + _d.toLocaleDateString('fr-FR') + ". À cette date, votre code d'accès cessera de fonctionner : vous pourrez alors vous abonner pour continuer.";
+      _sh.textContent = "Votre année gratuite est valable jusqu'au " + fmtDateParis(p.paidUntil) + ". À cette date, votre code d'accès cessera de fonctionner : vous pourrez alors vous abonner pour continuer.";
+    } else if(p.plan === 'semaine' && p.paidUntil){
+      _sh.textContent = "Votre forfait 1 semaine est valable jusqu'au " + fmtDateParis(p.paidUntil, true) + ". À cette date, votre code d'accès expirera automatiquement : passez à un abonnement mensuel ou annuel pour continuer, avec le même code.";
+    } else if((p.plan === 'mensuel' || p.plan === 'annuel') && p.paidUntil){
+      _sh.textContent = _sh._orig + " Prochaine échéance : " + fmtDateParis(p.paidUntil) + ".";
     } else { _sh.textContent = _sh._orig; }
   }
   renderAvatarPick();
@@ -1683,8 +1794,26 @@ async function checkAdminCode(){
 
 function closeModal(id){ document.getElementById(id).classList.remove('active'); }
 function openLightbox(src){
-  document.getElementById('lightbox-img').src = src;
+  const i1 = document.getElementById('lightbox-img'), i2 = document.getElementById('lightbox-img2');
+  i2.style.display = 'none'; i2.src = '';
+  i1.style.display = ''; i1.style.maxHeight = '85vh'; i1.src = src;
   document.getElementById('modal-lightbox').classList.add('active');
+}
+/* Carte d'identité (recto + verso) : réservée à l'auteur du signalement et à l'admin */
+function openIdViewer(recto, verso){
+  const i1 = document.getElementById('lightbox-img'), i2 = document.getElementById('lightbox-img2');
+  i1.style.maxHeight = '42vh'; i1.src = recto || ''; i1.style.display = recto ? '' : 'none';
+  i2.src = verso || ''; i2.style.display = verso ? '' : 'none';
+  document.getElementById('modal-lightbox').classList.add('active');
+}
+async function adminViewId(id){
+  if(!adminCode) return;
+  try{
+    const m = await rpc('admin_get_report_media', { p_admin_code: adminCode, p_id: id });
+    const r = safeImg(m && m.idRecto), v = safeImg(m && m.idVerso);
+    if(!r && !v){ showToast("Aucune pièce d'identité jointe à ce signalement."); return; }
+    openIdViewer(r, v);
+  }catch(e){ dbError(e); }
 }
 function closeLightboxBg(e){
   if(e.target.id === 'modal-lightbox'){ closeModal('modal-lightbox'); }
@@ -1759,6 +1888,7 @@ function normalizeReport(r){
   const d = decodeDesc(r.description);
   const m = d.meta || {};
   r.description = d.text;
+  r.statut = r.statut || 'confirme'; /* un signalement publié est directement « Confirmé » */
   r.type = r.type || m.t || '';
   r.gravite = parseInt(r.gravite || m.g, 10) || 0;
   r.numeroPermis = r.numeroPermis || m.pn || '';
@@ -1903,7 +2033,7 @@ function updateDupHint(){
    PRÉVENTION DES ABUS — limite quotidienne, sanctions, réputation
    ========================================================================= */
 const DAILY_LIMIT = 5;
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){ return today10(); }
 function agencyStats(){
   return myStats || { rejected:0, limit:DAILY_LIMIT, sanction:'', today:0, total:0, regularises:0 };
 }
@@ -2009,7 +2139,7 @@ function parseMoney(raw){
    FORMULAIRE DE SIGNALEMENT
    ========================================================================= */
 function openReportForm(){
-  ['f-agence','f-nom','f-prenom','f-naissance','f-permis-num','f-type','f-sinistre','f-vehicule','f-prejudice','f-description']
+  ['f-agence','f-nom','f-prenom','f-naissance','f-permis-num','f-type','f-sinistre','f-prejudice','f-description']
     .forEach(id=>document.getElementById(id).value = '');
   document.getElementById('f-certify').checked = false;
   togglePrejudice();
@@ -2028,7 +2158,7 @@ function openReportForm(){
 const REQUIRED_FIELDS = [
   ['f-agence', "Nom (agence, conciergerie ou bailleur)"], ['f-nom', 'Nom'], ['f-prenom', 'Prénom'],
   ['f-naissance', 'Date de naissance'], ['f-permis-num', "Numéro de pièce d'identité"],
-  ['f-type', "Type d'incident"], ['f-sinistre', 'Date du sinistre'], ['f-vehicule', 'Commune / type de logement']
+  ['f-type', "Type d'incident"], ['f-sinistre', 'Date du sinistre']
 ];
 function checkRequiredFields(){
   document.querySelectorAll('.field-error').forEach(el=>el.classList.remove('field-error'));
@@ -2058,7 +2188,7 @@ async function submitReport(){
   const numeroPermis = document.getElementById('f-permis-num').value.trim();
   const type = document.getElementById('f-type').value;
   const sinistre = document.getElementById('f-sinistre').value;
-  const vehicule = document.getElementById('f-vehicule').value.trim();
+  const vehicule = '';
   const description = document.getElementById('f-description').value.trim();
   const certify = document.getElementById('f-certify').checked;
 
@@ -2110,6 +2240,7 @@ async function confirmSubmitReport(){
     await rpc('create_report', { p_code: currentAccessCode, p_data: {
       agence:p.agence, nom:p.nom, prenom:p.prenom, naissance:p.naissance, sinistre:p.sinistre, vehicule:p.vehicule,
       type:p.type, gravite: formGravity, numeroPermis:p.numeroPermis, prejudice:p.prejudice,
+      statut:'confirme',
       description: p.description,
       photos: formPhotos
     }});
@@ -2156,17 +2287,18 @@ function renderHome(){
   const p = currentProfile || {};
   const name = p.agence || 'Mon compte';
   document.getElementById('agency-display-name').textContent = name;
+  renderSubBanner();
   document.getElementById('agency-initials').innerHTML = avatarInner(name, ownAvatar());
   document.getElementById('stat-total').textContent = reports.length;
-  const thisMonth = new Date().toISOString().slice(0,7);
-  document.getElementById('stat-month').textContent = reports.filter(r=>r.createdAt.startsWith(thisMonth)).length;
+  const thisMonth = today10().slice(0,7);
+  document.getElementById('stat-month').textContent = reports.filter(r=>r.createdAt && parisDate(r.createdAt).startsWith(thisMonth)).length;
 
   const recent = reports.slice(0,3);
   document.getElementById('recent-list').innerHTML = recent.map(r=>
     '<div class="mini-row" onclick="openDetailById(\''+r.id+'\')">'
     +'<div class="mini-ic">'+ic('alertTriangle',18)+'</div>'
     +'<div style="flex:1;"><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
-    +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.vehicule)+' · '+esc(r.agence)+'</div></div>'
+    +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.agence)+'</div></div>'
     +(gravMeta(r.gravite) ? '<span class="grav-pill" style="--gc:'+gravMeta(r.gravite).color+'; margin:0;" title="Gravité"><i class="grav-ico"></i>'+gravMeta(r.gravite).label+'</span>' : '')
     +'</div>'
   ).join('') || '<p>Aucun signalement pour le moment.</p>';
@@ -2344,13 +2476,13 @@ async function openDetailById(id){
     +row('Adresse du déclarant', agAddr(r) || '—')
     +row('Date de naissance', fmtDate(r.naissance))
         +row('N° de pièce d\'identité', r.numeroPermis || '—')
-        +row('Commune / type de logement', r.vehicule)
     +row('Date du sinistre', fmtDate(r.sinistre))
     +(r.prejudice !== null ? row('Montant du préjudice', fmtEuro(r.prejudice)) : '')
     +(r.regularise ? row('Régularisé le', fmtDate(r.regularise)) : '')
     +row('Conservation jusqu\'au', fmtDate(r.expiration))
     +'<div class="section-label">Description</div><p>'+(esc(r.description)||'—')+'</p>'
     +(r.photos && r.photos.length ? '<div class="section-label">Photos</div><div class="photo-grid">'+r.photos.map(p=>'<div class="photo-thumb"><img src="'+p+'" onclick="openLightbox(this.src)"></div>').join('')+'</div>' : '')
+    +((r.idRecto || r.idVerso) ? '<div class="section-label">Pièce d\'identité du locataire</div><p class="hint">Visible uniquement par vous (auteur du signalement) et par l\'administration.</p><div class="photo-grid">'+[r.idRecto, r.idVerso].filter(Boolean).map(p=>'<div class="photo-thumb"><img src="'+p+'" onclick="openLightbox(this.src)"></div>').join('')+'</div>' : '')
     +(function(){
       const c = clusters[r.id];
       if(!c || c.reports.length < 2) return '';
@@ -2421,8 +2553,8 @@ async function confirmAgencyAction(){
 function planLabel(a){ return (a.type==='particulier'?'Particulier · ':'Pro · ')+planLabel0(a); }
 function planLabel0(a){
   if(!a.plan) return 'Sans paiement';
-  if(a.plan === 'gratuit'){
-    let g = 'Gratuit 1 an';
+  if(a.plan === 'gratuit' || a.plan === 'semaine'){
+    let g = a.plan === 'semaine' ? '1 semaine (6,99 €)' : 'Gratuit 1 an';
     if(a.subStatus === 'canceled') g += ' · Résilié';
     else if(a.expired) g += ' · EXPIRÉ le ' + fmtDate(a.paidUntil);
     else g += ' · expire le ' + fmtDate(a.paidUntil);
@@ -2461,7 +2593,7 @@ function adminAgencyCard(a, clickable){
     +'<div class="mini-sub">'+esc(planLabel(a))+' · '+(a.plan === 'gratuit' ? 'souscrit le ' : 'inscrite le ')+fmtDate(a.createdAt)+'</div>'
     +(a.revoked ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">Code d\'accès radié</div>' : '')
     +(a.siretName ? '<div class="mini-sub">SIRET vérifié : '+esc(a.siretName)+'</div>' : '')
-    +(a.expired ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">Année gratuite terminée · code désactivé · doit s\'abonner</div>' : '')
+    +(a.expired ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">'+(a.plan === 'semaine' ? 'Forfait 1 semaine terminé' : 'Année gratuite terminée')+' · code désactivé · doit s\'abonner</div>' : '')
     +(a.emplacement ? '<div class="mini-sub">'+esc(a.emplacement)+'</div>' : '')
     +(a.contact ? '<div class="mini-sub">'+esc(a.contact)+'</div>' : '')
     +'</div></div></div>';
@@ -2501,8 +2633,9 @@ function adminReportRow(r, showDate){
   const meta = effStatus(r);
   return '<div class="admin-row">'
     +'<div class="admin-row-top"><div><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
-    +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.vehicule)+' · '+esc(r.agence)+(showDate && r.createdAt ? ' · '+fmtDate(String(r.createdAt).slice(0,10)) : '')+'</div></div>'
+    +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.agence)+(showDate && r.createdAt ? ' · '+fmtDate(String(r.createdAt).slice(0,10)) : '')+'</div></div>'
     +'<div class="admin-actions">'
+    +(r.hasId ? '<div class="admin-icbtn" title="Pièce d\'identité du locataire" onclick="adminViewId(\''+esc(r.id)+'\')">'+ic('user',16)+'</div>' : '')
     +'<div class="admin-icbtn" onclick="openEdit(\''+esc(r.id)+'\')">'+ic('edit',16)+'</div>'
     +'<div class="admin-icbtn del" onclick="askDelete(\''+esc(r.id)+'\')">'+ic('trash',16)+'</div>'
     +'</div></div>'
@@ -2562,7 +2695,7 @@ function renderAdminList(){
 
   const _n = (f)=>adminAgencies.filter(f).length;
   const _recap = 'Mensuel : '+_n(a=>a.plan==='mensuel')+' · Annuel : '+_n(a=>a.plan==='annuel')
-    +' · 1 an gratuit : '+_n(a=>a.plan==='gratuit' && !a.expired)+' · Gratuit expiré : '+_n(a=>a.plan==='gratuit' && a.expired);
+    +' · 1 semaine : '+_n(a=>a.plan==='semaine' && !a.expired)+' · 1 an gratuit : '+_n(a=>a.plan==='gratuit' && !a.expired)+' · Gratuit / semaine expiré : '+_n(a=>(a.plan==='gratuit' || a.plan==='semaine') && a.expired);
   let html = '<div class="section-label" style="margin-top:8px;">Adhérents ('+filtered.length+')</div>'
     + '<div class="mini-sub" style="margin:0 2px 10px; font-weight:700;">'+_recap+'</div>' + agencesHtml;
   if(!q){
@@ -2578,7 +2711,6 @@ function openEdit(id){
   editingId = id;
   document.getElementById('e-nom').value = r.nom || '';
   document.getElementById('e-prenom').value = r.prenom || '';
-  document.getElementById('e-vehicule').value = r.vehicule || '';
   document.getElementById('e-prejudice').value = r.prejudice !== null ? String(r.prejudice) : '';
   document.getElementById('e-description').value = r.description || '';
   document.getElementById('e-statut').value = r.statut;
@@ -2596,7 +2728,7 @@ async function saveEdit(){
   try{
     const ok = await rpc('admin_update_report', {
       p_admin_code: adminCode, p_id: editingId, p_nom: nom, p_prenom: prenom,
-      p_vehicule: document.getElementById('e-vehicule').value.trim(),
+      p_vehicule: ((adminReports.find(x=>x.id===editingId) || {}).vehicule || ''),
       p_description: document.getElementById('e-description').value.trim(),
       p_type: document.getElementById('e-type').value,
       p_gravite: parseInt(document.getElementById('e-gravite').value, 10) || 0,
@@ -2696,37 +2828,71 @@ function initStaticIcons(){
    COMPTES PRO / PARTICULIER, ANTI-FRAUDE, RAPPELS DE FIN D'ANNÉE GRATUITE
    ========================================================================= */
 let acctType = 'pro';
+function changeType(){ typeChosen = false; applyTypeUi(); }
 function selectType(t){
-  acctType = t;
+  acctType = t; typeChosen = true;
   document.querySelectorAll('.plan[data-type]').forEach(p=>p.classList.toggle('selected', p.getAttribute('data-type') === t));
   applyTypeUi();
 }
 function applyTypeUi(){
   const pro = acctType === 'pro', g = id=>document.getElementById(id);
   g('v-siret-wrap').style.display = pro ? '' : 'none';
-  g('v-addr-wrap').style.display = pro ? 'none' : '';
-  g('v-id-label').textContent = pro ? "Carte d'identité du gérant" : "Votre pièce d'identité";
+  g('v-id-label').textContent = pro ? "Carte d'identité du gérant" : "Votre carte d'identité";
   g('v-intro').textContent = pro
     ? "Pour protéger le réseau, envoyez la carte d'identité du gérant, ses informations et le n° SIRET de la structure avant de payer."
-    : "Pour protéger le réseau et éviter les comptes multiples, envoyez votre pièce d'identité, vos informations et l'adresse du bien que vous louez avant de payer.";
-  g('type-wrap').style.display = renewCode ? 'none' : '';
+    : "Pour protéger le réseau et éviter les comptes multiples, envoyez votre carte d'identité (recto et verso), vos informations et son numéro avant de payer.";
+  /* Étape 1 : seul le choix pro / particulier est affiché ; une fois choisi, il disparaît et laisse place aux offres */
+  const showOffers = !!renewCode || typeChosen, ow = g('offers-wrap'), wasShown = ow.style.display !== 'none';
+  g('type-wrap').style.display = showOffers ? 'none' : '';
+  ow.style.display = showOffers ? '' : 'none';
+  if(showOffers && !wasShown){ ow.classList.remove('reveal'); void ow.offsetWidth; ow.classList.add('reveal'); }
+  g('type-chip').style.display = renewCode ? 'none' : '';
+  g('offers-step').style.display = renewCode ? 'none' : '';
+  g('type-chip-label').textContent = pro ? 'Professionnel' : 'Particulier';
+  /* Forfait 1 semaine : réservé aux particuliers, pas en renouvellement */
+  const wk = document.querySelector('.plan[data-plan="3"]');
+  if(wk) wk.style.display = (!pro && !renewCode) ? '' : 'none';
+  if((pro || renewCode) && selectedPlanIndex === 3) selectPlan(0);
 }
 function luhn(s){ let t=0; for(let i=0;i<s.length;i++){ let d=+s[s.length-1-i]; if(i%2){ d*=2; if(d>9) d-=9; } t+=d; } return t%10===0; }
 const siretOk = s => /^\d{14}$/.test(s) && (luhn(s) || s.indexOf('356000000') === 0);
 const gv = id => (document.getElementById(id) || {}).value || '';
 function readVerify(){
-  return { type:acctType, siret:gv('v-siret').replace(/\D/g,''), nom:gv('v-nom').trim(), prenom:gv('v-prenom').trim(), naissance:gv('v-naiss'), idn:gv('v-idn').trim(), addr:gv('v-addr').trim() };
+  return { type:acctType, siret:gv('v-siret').replace(/\D/g,''), nom:gv('v-nom').trim(), prenom:gv('v-prenom').trim(), naissance:gv('v-naiss'), idn:gv('v-idn').trim(), addr:'' };
 }
 /* ---- Rappels : 1 mois, 2 semaines, 1 semaine, 3 jours et la veille de la fin de l'année gratuite ---- */
-const REMINDERS = [1,3,7,14,30];
-function daysLeft(p){ return Math.round((Date.parse(p.paidUntil) - Date.parse(today10())) / 864e5); }
+/* Dates affichées en heure de Paris */
+function fmtDateParis(iso, withTime){
+  const d = new Date(iso); if(isNaN(d)) return '—';
+  const o = withTime ? { timeZone:TZ, day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' } : { timeZone:TZ };
+  return d.toLocaleString('fr-FR', o).replace(',', ' à');
+}
+/* ---- Rappels avant la fin d'un accès : année gratuite, forfait 1 semaine, abonnements mensuel / annuel ---- */
+const REMIND_STEPS = { gratuit:[1,3,7,14,30], annuel:[1,3,7,14,30], mensuel:[1,3,7], semaine:[1,2] };
+/* Jours restants, en calendrier de Paris (pas de décalage d'un jour entre minuit et 2 h) */
+function daysLeft(p){ return Math.round((Date.parse(parisDate(p.paidUntil)) - Date.parse(today10())) / 864e5); }
+function whenText(d){ return d <= 0 ? "aujourd'hui" : (d === 1 ? 'demain' : 'dans '+d+' jours'); }
+function isPaidPlan(p){ return p && (p.plan === 'mensuel' || p.plan === 'annuel'); }
 function maybeRemind(p){
-  if(!p || p.plan !== 'gratuit' || p.expired || !p.paidUntil) return;
-  const d = daysLeft(p), m = REMINDERS.find(x=>d <= x);
+  if(!p || !REMIND_STEPS[p.plan] || p.expired || p.paused || !p.paidUntil || p.subStatus === 'canceled') return;
+  const d = daysLeft(p), m = REMIND_STEPS[p.plan].find(x=>d <= x);
   if(!m || (p.remindSeen && p.remindSeen <= m)) return;
-  const when = d <= 0 ? "aujourd'hui" : (d === 1 ? 'demain' : 'dans '+d+' jours'), end = new Date(p.paidUntil).toLocaleDateString('fr-FR');
-  document.getElementById('rem-title').textContent = d <= 0 ? "Dernier jour d'accès gratuit" : (d === 1 ? 'Dernier rappel : votre accès se termine demain' : 'Votre année gratuite se termine bientôt');
-  document.getElementById('rem-text').textContent = "Votre année gratuite se termine "+when+" (le "+end+"). Vous devrez alors renouveler votre abonnement pour continuer à utiliser Immo'Track. Vous gardez le même code d'accès et le même compte.";
+  const when = whenText(d), end = fmtDateParis(p.paidUntil, p.plan === 'semaine');
+  const btn = document.getElementById('rem-btn');
+  window._remPaid = isPaidPlan(p);
+  if(p.plan === 'semaine'){
+    document.getElementById('rem-title').textContent = d <= 0 ? "Dernier jour de votre forfait 1 semaine" : "Votre forfait 1 semaine se termine bientôt";
+    document.getElementById('rem-text').textContent = "Votre forfait 1 semaine se termine "+when+" (le "+end+"). Passez à un abonnement mensuel ou annuel pour continuer à vérifier des profils : vous gardez le même code d'accès et le même compte.";
+    btn.textContent = 'Passer à un abonnement supérieur';
+  } else if(window._remPaid){
+    document.getElementById('rem-title').textContent = d <= 0 ? "Votre abonnement arrive à échéance aujourd'hui" : "Échéance de votre abonnement";
+    document.getElementById('rem-text').textContent = "Votre abonnement arrive à échéance "+when+" (le "+end+"). Vérifiez votre moyen de paiement : si un paiement n'est pas reçu, votre compte est mis en pause.";
+    btn.textContent = 'Vérifier mon paiement';
+  } else {
+    document.getElementById('rem-title').textContent = d <= 0 ? "Dernier jour d'accès gratuit" : (d === 1 ? 'Dernier rappel : votre accès se termine demain' : 'Votre année gratuite se termine bientôt');
+    document.getElementById('rem-text').textContent = "Votre année gratuite se termine "+when+" (le "+end+"). Vous devrez alors renouveler votre abonnement pour continuer à utiliser Immo'Track. Vous gardez le même code d'accès et le même compte.";
+    btn.textContent = "S'abonner pour continuer";
+  }
   window._remM = m;
   document.getElementById('modal-reminder').classList.add('active');
 }
@@ -2735,11 +2901,45 @@ async function remindMark(){
   if(currentProfile) currentProfile.remindSeen = m;
   try{ await rpc('set_reminder_seen', { p_code: currentAccessCode, p_m: m }); }catch(e){}
 }
-async function remindSubscribe(){ await remindMark(); renewCode = currentAccessCode; goTo('subscription'); }
+function upgradeSub(){
+  renewKind = (currentProfile && currentProfile.plan === 'semaine') ? 'semaine' : 'gratuit';
+  renewCode = currentAccessCode; goTo('subscription');
+}
+async function remindSubscribe(){
+  await remindMark();
+  if(window._remPaid){ openBillingPortal(); return; }
+  upgradeSub();
+}
 function remindLater(){ remindMark(); }
+/* Bandeau permanent sur l'accueil : forfait 1 semaine (toujours), et les 7 derniers jours des autres formules */
+function renderSubBanner(){
+  const el = document.getElementById('sub-banner'); if(!el) return;
+  const p = currentProfile;
+  el.style.display = 'none'; el.innerHTML = '';
+  if(!p || !REMIND_STEPS[p.plan] || p.expired || p.paused || !p.paidUntil || p.subStatus === 'canceled') return;
+  const d = daysLeft(p);
+  let title = '', text = '', label = '', fn = '';
+  if(p.plan === 'semaine'){
+    title = 'Forfait 1 semaine';
+    text = "Votre accès expire "+(d <= 0 ? "aujourd'hui" : (d === 1 ? 'demain' : 'dans '+d+' jours'))+" (le "+fmtDateParis(p.paidUntil, true)+"). Passez à un abonnement mensuel ou annuel pour continuer sans interruption, avec le même code d'accès.";
+    label = 'Passer à un abonnement supérieur'; fn = 'upgradeSub()';
+  } else if(d <= 7 && isPaidPlan(p)){
+    title = "Échéance de votre abonnement";
+    text = "Prochaine échéance "+whenText(d)+" (le "+fmtDateParis(p.paidUntil)+"). Vérifiez votre moyen de paiement pour éviter la mise en pause de votre compte.";
+    label = 'Gérer mon paiement'; fn = 'openBillingPortal()';
+  } else if(d <= 7 && p.plan === 'gratuit'){
+    title = 'Votre année gratuite se termine bientôt';
+    text = "Votre accès gratuit se termine "+whenText(d)+" (le "+fmtDateParis(p.paidUntil)+"). Abonnez-vous pour continuer : même code d'accès, même compte.";
+    label = "S'abonner"; fn = 'upgradeSub()';
+  } else return;
+  el.innerHTML = '<div class="sub-banner-ic">'+ic('clock',20)+'</div><div style="flex:1; min-width:0;"><div class="sub-banner-title">'+esc(title)+'</div>'
+    +'<div class="sub-banner-text">'+esc(text)+'</div>'
+    +'<button class="btn small" style="margin-top:10px;" onclick="'+fn+'">'+esc(label)+'</button></div>';
+  el.style.display = 'flex';
+}
 function adminExpBlock(a){
-  if(a.plan !== 'gratuit') return '';
-  return '<div class="section-label">Test des rappels (année gratuite)</div><div class="admin-row"><div class="field" style="margin-bottom:8px;"><label>Date de fin de l\'année gratuite</label><input type="date" id="adm-exp" value="'+esc(String(a.paidUntil || '').slice(0,10))+'"></div><button class="btn secondary" onclick="adminSetExp()">Appliquer la date</button><div class="hint">Choisissez une date dans moins de 30 jours : le rappel s\'affichera à la prochaine connexion de l\'adhérent.</div></div>';
+  if(a.plan !== 'gratuit' && a.plan !== 'semaine') return '';
+  return '<div class="section-label">Test des rappels (année gratuite / semaine)</div><div class="admin-row"><div class="field" style="margin-bottom:8px;"><label>Date de fin de l\'année gratuite</label><input type="date" id="adm-exp" value="'+esc(String(a.paidUntil || '').slice(0,10))+'"></div><button class="btn secondary" onclick="adminSetExp()">Appliquer la date</button><div class="hint">Choisissez une date dans moins de 30 jours : le rappel s\'affichera à la prochaine connexion de l\'adhérent.</div></div>';
 }
 async function adminSetExp(){
   const v = document.getElementById('adm-exp').value;
