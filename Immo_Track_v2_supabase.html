@@ -154,6 +154,24 @@
   }
   input:focus, textarea:focus{ border-color:var(--primary); background:var(--surface-3); }
   textarea{ resize:vertical; min-height:92px; }
+  select.sel{ width:100%; padding:14px 40px 14px 15px; border-radius:14px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text); font-family:inherit; font-size:14.5px; outline:none; cursor:pointer; -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b5e4b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 15px center; }
+  select.sel:focus{ border-color:var(--primary); background-color:var(--surface-3); }
+  .struct-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .struct-chip{ display:inline-flex; align-items:center; gap:8px; padding:8px 8px 8px 13px; border-radius:999px; background:var(--surface-3);
+    border:1px solid var(--primary); font-size:13px; font-weight:700; color:var(--text); }
+  .struct-chip button{ width:22px; height:22px; border-radius:50%; border:none; background:var(--surface-2); color:var(--text-2); cursor:pointer;
+    font-size:15px; line-height:1; padding:0; font-family:inherit; }
+  .addr-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .addr-row input{ flex:1; min-width:0; }
+  .addr-del{ width:42px; height:42px; flex-shrink:0; border-radius:13px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text-2); font-size:20px; cursor:pointer; font-family:inherit; }
+  .addr-add{ display:flex; align-items:center; gap:10px; width:100%; padding:10px 4px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:13.5px; font-weight:700; color:var(--primary-dark); text-align:left; }
+  .addr-add .plus{ width:30px; height:30px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center;
+    justify-content:center; font-size:20px; font-weight:800; line-height:1; flex-shrink:0; }
   .shake{ animation:shake .4s ease; }
   @keyframes shake{ 10%,90%{transform:translateX(-2px);} 20%,80%{transform:translateX(4px);} 30%,50%,70%{transform:translateX(-8px);} 40%,60%{transform:translateX(8px);} }
   .error-text{ color:var(--danger); font-size:12.5px; margin-top:8px; min-height:16px; }
@@ -567,7 +585,7 @@
 
       <div class="section-label">Paiement sécurisé</div>
       <button class="btn" onclick="goTo('verify')" id="stripe-pay-btn">Payer <span id="stripe-pay-amount">29,90€</span></button>
-      <div class="hint" style="text-align:center;">Étape suivante : vérification de votre identité, puis paiement sécurisé par Stripe.</div>
+      <div class="hint" style="text-align:center;">Étape suivante : vérification de votre identité, puis paiement (simulé en local).</div>
       </div>
     </div>
   </div>
@@ -638,7 +656,7 @@
       </label>
       <div class="section-label">Paiement sécurisé</div>
       <button class="btn" id="verify-pay-btn" disabled onclick="startStripeCheckout()">Payer <span id="verify-pay-amount">29,90€</span></button>
-      <div class="hint" style="text-align:center;">Paiement sécurisé par Stripe : vos coordonnées bancaires ne transitent jamais par Immo'Track.<br>Abonnement à renouvellement automatique, résiliable à tout moment depuis votre profil. La période en cours n'est jamais remboursée. Si un paiement n'est pas reçu, votre compte est mis en pause.</div>
+      <div class="hint" style="text-align:center;">Paiement simulé en local : aucun paiement réel n'est effectué.<br>Abonnement à renouvellement automatique, résiliable à tout moment depuis votre profil. La période en cours n'est jamais remboursée. Si un paiement n'est pas reçu, votre compte est mis en pause.</div>
     </div>
   </div>
 
@@ -697,7 +715,14 @@
 
       <div class="hint" style="margin-top:6px;">Cette pièce d'identité n'est consultable que par l'administration d'Immo'Track. Elle n'est jamais affichée ici ni aux autres adhérents.</div>
 
-      <div class="field" style="margin-top:14px;"><label>Adresse (agence ou bien loué)</label><input type="text" id="p-emplacement" placeholder="Adresse complète">
+      <div class="field" style="margin-top:14px;"><label>Adresse (agence ou bien loué)</label>
+        <div id="p-struct-wrap">
+          <div class="struct-chips" id="p-struct-chips"></div>
+          <select class="sel" id="p-struct-select" onchange="addStructure(this.value)"></select>
+          <div style="height:10px;"></div>
+        </div>
+        <div id="p-addr-list"></div>
+        <button type="button" class="addr-add" id="p-addr-add" onclick="addAddrRow()"><span class="plus">+</span><span id="p-addr-add-label">Ajouter l'adresse d'un autre bien</span></button>
         <div class="hint" style="margin:6px 0 0;">L'adresse d'un particulier n'est jamais affichée aux autres adhérents.</div></div>
       <div class="field"><label>Contact</label><input type="text" id="p-contact" placeholder="Téléphone ou email"></div>
 
@@ -847,60 +872,27 @@
     <div class="top-nav"><div class="icon-btn" onclick="closeLegal()"></div><div class="top-title">Confidentialité</div></div>
     <div class="legal-doc" style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
       <h1>Politique de confidentialité</h1>
-      <p class="hint">Dernière mise à jour : 11 octobre 2026.</p>
-
-      <h3>1. Qui est responsable de vos données ?</h3>
-      <p>Le responsable de traitement est l'éditeur d'Immo'Track, Aucun. Pour toute question, demande d'exercice de vos droits ou réclamation relative aux données personnelles : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
-      <p>Immo'Track est un réseau de confiance locative : des bailleurs (professionnels et particuliers) y signalent les incidents survenus avec un locataire (impayés, dégradations, etc.) et y vérifient le profil d'un candidat avant de louer. Le service est réservé aux personnes majeures.</p>
-
-      <h3>2. Quelles données, pourquoi et sur quelle base légale ?</h3>
+      <p class="hint">Les éléments surlignés <span class="todo">[entre crochets]</span> sont à compléter avant toute mise en ligne.</p>
+      <h3>1. Responsable de traitement</h3>
+      <p>Immo'Track, <span class="todo">[raison sociale, forme juridique, SIRET, adresse du siège]</span>. Contact pour toute réclamation ou demande relative aux données personnelles : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
+      <h3>2. Données et finalités</h3>
       <ul>
-        <li><b>Compte adhérent et abonnement</b> (exécution du contrat) : nom, prénom, date de naissance, n° de pièce d'identité, recto et verso de la carte d'identité du gérant (professionnel) ou du bailleur (particulier), n° SIRET pour les professionnels, nom de l'agence, emplacement, contact, photo de profil facultative, formule choisie et dates de validité, adresse e-mail de facturation. Les particuliers ne fournissent aucune adresse. Ces éléments servent uniquement à vérifier l'accès, éviter les comptes multiples et gérer l'abonnement. La carte d'identité de l'adhérent n'est consultable que par l'administration d'Immo'Track.</li>
-        <li><b>Paiement</b> (exécution du contrat) : le paiement est traité par Stripe sur sa propre page sécurisée. Immo'Track ne reçoit ni ne conserve votre numéro de carte bancaire ; nous conservons uniquement les identifiants client et abonnement Stripe, l'adresse e-mail de facturation et les dates de paiement.</li>
-        <li><b>Signalements entre bailleurs</b> (intérêt légitime : prévenir les impayés et les dégradations) : concernant le locataire, nom, prénom, date de naissance, n° de pièce d'identité, nature et date du manquement, indicateur de gravité, montant du préjudice éventuel, description des faits, photos et, si l'adhérent la joint, la carte d'identité (recto/verso), ainsi que la date de régularisation le cas échéant. Concernant l'auteur : son agence ou nom d'affichage. Les signalements sont visibles par les adhérents authentifiés dès leur enregistrement ; les photos jointes sont consultables par les adhérents authentifiés qui ouvrent le dossier. La carte d'identité du locataire, lorsqu'elle est jointe, n'est accessible qu'à l'adhérent auteur du signalement et à l'administration d'Immo'Track : les autres adhérents n'y ont pas accès.</li>
-        <li><b>Lutte contre la fraude</b> (intérêt légitime) : pour refuser la création d'un second compte par la même personne ou la même structure, nous conservons des clés techniques dérivées du n° de pièce d'identité, du nom, du prénom et de la date de naissance, et du n° SIRET pour les professionnels. Elles ne servent à aucune autre finalité.</li>
-        <li><b>Sécurité</b> (intérêt légitime) : l'adresse IP est utilisée pour limiter les tentatives de connexion répétées (blocage temporaire de 15 minutes après 15 échecs) et conservée le temps strictement nécessaire à cette protection.</li>
-        <li><b>Vérification du SIRET</b> (intérêt légitime) : le n° SIRET saisi est contrôlé auprès de l'annuaire public des entreprises (recherche-entreprises.api.gouv.fr). Seul ce numéro est transmis.</li>
+        <li><b>Comptes adhérents et abonnements</b> (exécution du contrat) : nom, prénom, n° SIRET ou adresse du bien, coordonnées, pièce d'identité du gérant ou du bailleur (recto/verso), date de naissance et n° de pièce, utilisés uniquement pour vérifier l'accès et éviter les comptes multiples. La pièce d'identité n'est consultable que par l'administration d'Immo'Track. Les données de paiement sont traitées par notre prestataire de paiement.</li>
+        <li><b>Prévention des impayés et dégradations entre bailleurs</b> (intérêt légitime) : nom, prénom, date de naissance, n° de pièce d'identité, type et date du manquement, indicateur de gravité renseigné par l'adhérent, commune ou type de logement, montant éventuel, description, photos. Les signalements sont visibles des adhérents authentifiés dès leur enregistrement.</li>
+        <li><b>Lutte contre la fraude</b> (intérêt légitime) : empreintes irréversibles (hachées) de l'identité, du n° SIRET ou de l'adresse du bien, conservées 24 mois.</li>
       </ul>
-
       <h3>3. Information des locataires</h3>
-      <p>Les locataires sont informés par l'agence ou le bailleur qui effectue le signalement, au moyen d'une clause de leur contrat de location qui renvoie vers le contact de réclamation indiqué ci-dessus. Chaque adhérent s'engage à insérer cette clause dans ses contrats et reste seul responsable de l'exactitude des faits qu'il signale. Un locataire peut à tout moment demander l'accès, la rectification ou l'effacement des informations qui le concernent.</p>
-
-      <h3>4. Combien de temps conservons-nous les données ?</h3>
-      <ul>
-        <li><b>Signalements</b> : supprimés au plus tard 3 ans après leur création, et 12 mois après leur régularisation si elle intervient avant.</li>
-        <li><b>Comptes résiliés ou année gratuite terminée</b> : suppression 12 mois après la résiliation ou la fin de l'accès.</li>
-        <li><b>Forfait 1 semaine</b> : à la fin de la semaine, un abonnement mensuel ou annuel est proposé avec le même code d'accès. Sans réabonnement, le compte et les données personnelles associées (identité, carte d'identité, clés anti-fraude) sont supprimés 7 jours après la fin du forfait.</li>
-        <li><b>Abonnement mensuel ou annuel arrivé à échéance</b> : le compte est mis en pause et conservé pour permettre sa réactivation avec le même code d'accès, et supprimé à votre demande.</li>
-        <li><b>Clés anti-fraude</b> : 24 mois.</li>
-        <li><b>Inscriptions en attente de paiement</b> : 7 jours.</li>
-        <li><b>Pièces comptables et justificatifs de paiement</b> : durée légale (10 ans).</li>
-      </ul>
-
+      <p>Les locataires sont informés par l'agence ou le bailleur qui effectue le signalement, au moyen d'une clause de leur contrat de location renvoyant vers le contact de réclamation ci-dessus.</p>
+      <h3>4. Durées de conservation</h3>
+      <p>Signalements : 3 ans au plus tard après leur création, et 12 mois après leur régularisation. Comptes résiliés ou année gratuite terminée : suppression après 12 mois. Empreintes anti-fraude : 24 mois. Pièces comptables : durée légale.</p>
       <h3>5. Décisions automatisées</h3>
-      <p>Immo'Track ne prend aucune décision automatisée concernant les locataires : l'indicateur de gravité est saisi par l'adhérent auteur du signalement, et la décision de louer appartient au bailleur. Concernant les adhérents, le nombre de signalements rejetés par l'administration réduit automatiquement la limite quotidienne de signalements, jusqu'à la suspension de la possibilité de signaler en cas de rejets répétés. Vous pouvez contester ces mesures en nous contactant.</p>
-
-      <h3>6. Qui a accès à vos données ?</h3>
-      <ul>
-        <li>Les adhérents authentifiés (signalements, photos et pièces jointes) ;</li>
-        <li>L'administration d'Immo'Track (cartes d'identité des adhérents et des locataires, modération) ;</li>
-        <li><b>Supabase</b> (base de données et fonctions serveur), sous-traitant, hébergé en Europe (région de Paris, infrastructure Amazon Web Services) ;</li>
-        <li><b>Stripe Payments Europe, Ltd</b> (paiement, Irlande), qui agit en son nom propre pour les obligations liées au paiement ; d'éventuels transferts hors Union européenne sont encadrés par les mécanismes prévus par le RGPD (clauses contractuelles types ou cadre de protection des données UE-États-Unis) ;</li>
-        <li><b>GitHub, Inc.</b> (GitHub Pages, États-Unis), hébergeur du site, pour la diffusion des pages ; d'éventuels transferts hors Union européenne sont encadrés par les mécanismes prévus par le RGPD.</li>
-      </ul>
-      <p>Vos données ne sont ni vendues ni utilisées à des fins publicitaires.</p>
-
+      <p>Immo'Track ne prend aucune décision automatisée. L'indicateur de gravité est saisi par l'adhérent auteur du signalement ; la décision de louer appartient au bailleur.</p>
+      <h3>6. Destinataires et sous-traitants</h3>
+      <p>Adhérents authentifiés (signalements), administration d'Immo'Track (pièces d'identité), et prestataires techniques : hébergement <span class="todo">[nom, pays]</span> ; paiement (Stripe) <span class="todo">[rôle et garanties de transfert à préciser]</span>.</p>
       <h3>7. Vos droits</h3>
-      <p>Vous disposez des droits d'accès, de rectification, d'effacement, d'opposition, de limitation et, pour les données traitées dans le cadre du contrat, de portabilité. Pour les exercer, contactez-nous sur Telegram <a onclick="openTelegram()">t.me/aucunn</a> ; nous répondons dans un délai d'un mois et pouvons vous demander un justificatif d'identité pour protéger vos données. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (www.cnil.fr).</p>
-
-      <h3>8. Sécurité</h3>
-      <p>Les échanges sont chiffrés (HTTPS). L'accès au service se fait par code d'accès personnel, les contrôles sont réalisés côté serveur, la consultation des cartes d'identité est réservée à l'administration (et, pour la carte d'un locataire, à l'adhérent qui l'a jointe), et les tentatives de connexion répétées sont bloquées temporairement.</p>
-
-      <h3>9. Stockage dans votre navigateur</h3>
-      <p>Ce site n'utilise que le stockage local nécessaire à son fonctionnement (maintien de votre session, thème d'affichage), sans traceur publicitaire ni mesure d'audience. Lors du paiement, Stripe peut déposer ses propres cookies techniques sur sa page, selon sa propre politique.</p>
-
-      <h3>10. Modifications</h3>
-      <p>Cette politique peut évoluer ; la date de dernière mise à jour figure en haut de la page.</p>
+      <p>Accès, rectification, effacement, opposition, limitation : contactez-nous sur Telegram <a onclick="openTelegram()">t.me/aucunn</a>. Vous pouvez aussi saisir la CNIL (www.cnil.fr).</p>
+      <h3>8. Stockage dans votre navigateur</h3>
+      <p>Ce site n'utilise que le stockage local nécessaire à son fonctionnement (session, limite quotidienne), sans traceur publicitaire ni mesure d'audience.</p>
     </div>
   </div>
 
@@ -909,32 +901,14 @@
     <div class="top-nav"><div class="icon-btn" onclick="closeLegal()"></div><div class="top-title">Mentions légales</div></div>
     <div class="legal-doc" style="padding:8px 22px 22px; flex:1; overflow-y:auto;">
       <h1>Mentions légales</h1>
-      <p class="hint">Dernière mise à jour : 11 octobre 2026.</p>
-
-      <h3>Éditeur du site</h3>
-      <p>Immo'Track — Réseau de Confiance Locative.<br>Éditeur : Aucun.<br>Contact : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
-
-      <h3>Hébergement</h3>
-      <p><b>Données et fonctions serveur</b> : Supabase Inc., infrastructure Amazon Web Services, région Europe (Paris).<br>
-      <b>Site</b> : GitHub, Inc. (GitHub Pages), 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
-
-      <h3>Nature du service</h3>
-      <p>Immo'Track met en relation des bailleurs (professionnels et particuliers) afin qu'ils partagent des informations de prévention des impayés et des dégradations. L'accès est réservé aux adhérents majeurs, vérifiés à l'inscription, et fonctionne sur abonnement (mensuel, annuel, forfait 1 semaine pour les particuliers) ou pendant une année gratuite. Les paiements sont traités par Stripe.</p>
-
-      <h3>Responsabilité des signalements</h3>
-      <p>Chaque signalement est rédigé sous la seule responsabilité de l'adhérent qui le publie, qui garantit l'exactitude des faits et l'information préalable du locataire. Immo'Track n'est pas partie aux contrats de location, ne vérifie pas les faits avant publication et peut rejeter, modifier ou supprimer tout signalement inexact, abusif ou contraire à la loi. Aucun signalement ne constitue une décision de refus de location : la décision appartient au bailleur.</p>
-
-      <h3>Propriété intellectuelle</h3>
-      <p>Le nom, le logo, la charte graphique, les textes et le code du site sont la propriété de l'éditeur. Toute reproduction ou extraction, même partielle, des contenus et de la base de signalements, sans autorisation écrite, est interdite.</p>
-
-      <h3>Données personnelles</h3>
-      <p>Le traitement des données personnelles est décrit dans la <a onclick="openLegal('privacy')">politique de confidentialité</a>.</p>
-
+      <h3>Éditeur</h3>
+      <p>Immo'Track — <span class="todo">[raison sociale, forme juridique, capital, SIRET / RCS, adresse, e-mail, téléphone]</span></p>
+      <h3>Directeur de la publication</h3>
+      <p><span class="todo">[nom et prénom]</span></p>
+      <h3>Hébergeur</h3>
+      <p><span class="todo">[nom, adresse et téléphone de l'hébergeur]</span></p>
       <h3>Contact et réclamations</h3>
-      <p>Pour toute question, demande de retrait ou réclamation : Telegram <a onclick="openTelegram()">t.me/aucunn</a>.</p>
-
-      <h3>Droit applicable</h3>
-      <p>Le site est soumis au droit français. À défaut de résolution amiable, les tribunaux français sont compétents.</p>
+      <p>Telegram : <a onclick="openTelegram()">t.me/aucunn</a>. Voir aussi la <a onclick="openLegal('privacy')">politique de confidentialité</a>.</p>
     </div>
   </div>
 
@@ -1080,10 +1054,9 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-lightbox" style="flex-direction:column; gap:12px;" onclick="closeLightboxBg(event)">
+  <div class="modal-overlay" id="modal-lightbox" onclick="closeLightboxBg(event)">
     <div class="icon-btn" id="lightbox-close" style="position:absolute; top:20px; right:20px; z-index:2;" onclick="closeModal('modal-lightbox')"></div>
     <img id="lightbox-img" src="" style="max-width:100%; max-height:85vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6);">
-    <img id="lightbox-img2" src="" style="display:none; max-width:100%; max-height:42vh; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.6);">
   </div>
 </div>
 
@@ -1663,11 +1636,66 @@ async function handleStripeReturn(){
    PROFIL DE L'AGENCE — création à la souscription, modifiable à tout moment
    depuis l'accueil de l'espace adhérent.
    ========================================================================= */
+/* --- Adresses : type de structure (pro) + une ou plusieurs adresses ---------
+   Stocké dans le champ existant « emplacement » : « [Conciergerie, SCI] adresse 1 | adresse 2 »
+   (aucun changement de base de données nécessaire). */
+const STRUCT_TYPES = ['Conciergerie','Bailleur','SCI'];
+let structSel = [], addrList = [''], addrPro = true;
+function parseEmpl(str){
+  let t = String(str || ''), types = [];
+  const m = t.match(/^\[([^\]]*)\]\s*/);
+  if(m){ types = m[1].split(',').map(x=>x.trim()).filter(x=>STRUCT_TYPES.indexOf(x) >= 0); t = t.slice(m[0].length); }
+  return { types:types, addrs:t.split('|').map(x=>x.trim()).filter(Boolean) };
+}
+function emplText(str){
+  const o = parseEmpl(str);
+  return (o.types.length ? o.types.join(', ') + (o.addrs.length ? ' — ' : '') : '') + o.addrs.join(' · ');
+}
+function initAddrEditor(p){
+  addrPro = (p && p.type) !== 'particulier';
+  const o = parseEmpl(p && p.emplacement);
+  structSel = addrPro ? o.types : [];
+  addrList = o.addrs.length ? o.addrs : [''];
+  document.getElementById('p-struct-wrap').style.display = addrPro ? '' : 'none';
+  document.getElementById('p-addr-add-label').textContent = addrPro ? "Ajouter l'adresse d'un autre bien" : "Ajouter l'adresse d'un autre bien immobilier";
+  renderStructEditor(); renderAddrRows();
+}
+function readAddrEditor(){
+  const a = addrList.map(x=>x.trim()).filter(Boolean).join(' | ');
+  return (addrPro && structSel.length ? '[' + structSel.join(', ') + '] ' : '') + a;
+}
+function renderStructEditor(){
+  const chips = document.getElementById('p-struct-chips'), sel = document.getElementById('p-struct-select');
+  chips.innerHTML = structSel.map(t =>
+    '<span class="struct-chip">' + esc(t) + '<button type="button" aria-label="Retirer ' + esc(t) + '" onclick="removeStructure(\'' + t + '\')">×</button></span>').join('');
+  const left = STRUCT_TYPES.filter(t => structSel.indexOf(t) < 0);
+  sel.innerHTML = '<option value="">' + (structSel.length ? 'Ajouter un autre type…' : 'Type de structure…') + '</option>'
+    + left.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+  sel.value = '';
+  sel.style.display = left.length ? '' : 'none';
+}
+function addStructure(v){
+  if(v && STRUCT_TYPES.indexOf(v) >= 0 && structSel.indexOf(v) < 0) structSel.push(v);
+  renderStructEditor();
+}
+function removeStructure(v){ structSel = structSel.filter(x=>x !== v); renderStructEditor(); }
+function renderAddrRows(){
+  const ph = addrPro ? "Adresse de l'agence ou du bien" : "Adresse du bien";
+  document.getElementById('p-addr-list').innerHTML = addrList.map((v,i) =>
+    '<div class="addr-row"><input type="text" value="' + esc(v) + '" placeholder="' + ph + '" autocomplete="off" oninput="addrList[' + i + ']=this.value.replace(/[|]/g,\'\')">'
+    + (addrList.length > 1 ? '<button type="button" class="addr-del" aria-label="Supprimer cette adresse" onclick="removeAddrRow(' + i + ')">×</button>' : '') + '</div>').join('');
+}
+function addAddrRow(){
+  addrList.push(''); renderAddrRows();
+  const ins = document.querySelectorAll('#p-addr-list input'); if(ins.length) ins[ins.length-1].focus();
+}
+function removeAddrRow(i){ addrList.splice(i,1); if(!addrList.length) addrList = ['']; renderAddrRows(); }
+
 function openProfileView(){
   if(!currentAccessCode) return;
   const p = currentProfile || {};
   document.getElementById('p-agence').value = p.agence || '';
-  document.getElementById('p-emplacement').value = p.emplacement || '';
+  initAddrEditor(p);
   document.getElementById('p-contact').value = p.contact || '';
   idData.profile.recto = null;
   idData.profile.verso = null;
@@ -1699,7 +1727,7 @@ async function saveProfile(){
   const next = {
     agence: document.getElementById('p-agence').value.trim(),
     numero: document.getElementById('p-siret').value.replace(/\D/g,''),
-    emplacement: document.getElementById('p-emplacement').value.trim(),
+    emplacement: readAddrEditor(),
     contact: document.getElementById('p-contact').value.trim(),
     idRecto: idData.profile.recto, idVerso: idData.profile.verso
   };
@@ -1794,26 +1822,8 @@ async function checkAdminCode(){
 
 function closeModal(id){ document.getElementById(id).classList.remove('active'); }
 function openLightbox(src){
-  const i1 = document.getElementById('lightbox-img'), i2 = document.getElementById('lightbox-img2');
-  i2.style.display = 'none'; i2.src = '';
-  i1.style.display = ''; i1.style.maxHeight = '85vh'; i1.src = src;
+  document.getElementById('lightbox-img').src = src;
   document.getElementById('modal-lightbox').classList.add('active');
-}
-/* Carte d'identité (recto + verso) : réservée à l'auteur du signalement et à l'admin */
-function openIdViewer(recto, verso){
-  const i1 = document.getElementById('lightbox-img'), i2 = document.getElementById('lightbox-img2');
-  i1.style.maxHeight = '42vh'; i1.src = recto || ''; i1.style.display = recto ? '' : 'none';
-  i2.src = verso || ''; i2.style.display = verso ? '' : 'none';
-  document.getElementById('modal-lightbox').classList.add('active');
-}
-async function adminViewId(id){
-  if(!adminCode) return;
-  try{
-    const m = await rpc('admin_get_report_media', { p_admin_code: adminCode, p_id: id });
-    const r = safeImg(m && m.idRecto), v = safeImg(m && m.idVerso);
-    if(!r && !v){ showToast("Aucune pièce d'identité jointe à ce signalement."); return; }
-    openIdViewer(r, v);
-  }catch(e){ dbError(e); }
 }
 function closeLightboxBg(e){
   if(e.target.id === 'modal-lightbox'){ closeModal('modal-lightbox'); }
@@ -2369,7 +2379,7 @@ function isMine(r){
   return !!(currentProfile && currentProfile.ref && r.authorRef === currentProfile.ref);
 }
 function agAddr(r){
-  return r.agenceAdresse || (isMine(r) && currentProfile && currentProfile.emplacement) || '';
+  return parseEmpl(r.agenceAdresse || (isMine(r) && currentProfile && currentProfile.emplacement) || '').addrs.join(' · ');
 }
 
 /* --- Régularisation (loyers réglés, clés restituées) : réservée à l'agence auteure --- */
@@ -2482,7 +2492,6 @@ async function openDetailById(id){
     +row('Conservation jusqu\'au', fmtDate(r.expiration))
     +'<div class="section-label">Description</div><p>'+(esc(r.description)||'—')+'</p>'
     +(r.photos && r.photos.length ? '<div class="section-label">Photos</div><div class="photo-grid">'+r.photos.map(p=>'<div class="photo-thumb"><img src="'+p+'" onclick="openLightbox(this.src)"></div>').join('')+'</div>' : '')
-    +((r.idRecto || r.idVerso) ? '<div class="section-label">Pièce d\'identité du locataire</div><p class="hint">Visible uniquement par vous (auteur du signalement) et par l\'administration.</p><div class="photo-grid">'+[r.idRecto, r.idVerso].filter(Boolean).map(p=>'<div class="photo-thumb"><img src="'+p+'" onclick="openLightbox(this.src)"></div>').join('')+'</div>' : '')
     +(function(){
       const c = clusters[r.id];
       if(!c || c.reports.length < 2) return '';
@@ -2594,7 +2603,7 @@ function adminAgencyCard(a, clickable){
     +(a.revoked ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">Code d\'accès radié</div>' : '')
     +(a.siretName ? '<div class="mini-sub">SIRET vérifié : '+esc(a.siretName)+'</div>' : '')
     +(a.expired ? '<div class="mini-sub" style="color:var(--danger); font-weight:800;">'+(a.plan === 'semaine' ? 'Forfait 1 semaine terminé' : 'Année gratuite terminée')+' · code désactivé · doit s\'abonner</div>' : '')
-    +(a.emplacement ? '<div class="mini-sub">'+esc(a.emplacement)+'</div>' : '')
+    +(a.emplacement ? '<div class="mini-sub">'+esc(emplText(a.emplacement))+'</div>' : '')
     +(a.contact ? '<div class="mini-sub">'+esc(a.contact)+'</div>' : '')
     +'</div></div></div>';
 }
@@ -2624,7 +2633,7 @@ function adminProfileBlock(a){
         +'<div><label style="font-size:11px;">Recto</label>'+slot(recto)+'</div>'
         +'<div><label style="font-size:11px;">Verso</label>'+slot(verso)+'</div>'
       +'</div></div>'
-    +'<div class="field"><label>Adresse (agence ou bien loué)</label>'+val(place)+'</div>'
+    +'<div class="field"><label>Adresse (agence ou bien loué)</label>'+val(emplText(place))+'</div>'
     +'<div class="field" style="margin-bottom:0;"><label>Contact</label>'+val(contact)+'</div>'
     +'</div>';
 }
@@ -2635,7 +2644,6 @@ function adminReportRow(r, showDate){
     +'<div class="admin-row-top"><div><div class="mini-name">'+esc(r.prenom)+' '+esc(r.nom)+'</div>'
     +'<div class="mini-sub">'+esc(typeLabel(r.type))+' · '+esc(r.agence)+(showDate && r.createdAt ? ' · '+fmtDate(String(r.createdAt).slice(0,10)) : '')+'</div></div>'
     +'<div class="admin-actions">'
-    +(r.hasId ? '<div class="admin-icbtn" title="Pièce d\'identité du locataire" onclick="adminViewId(\''+esc(r.id)+'\')">'+ic('user',16)+'</div>' : '')
     +'<div class="admin-icbtn" onclick="openEdit(\''+esc(r.id)+'\')">'+ic('edit',16)+'</div>'
     +'<div class="admin-icbtn del" onclick="askDelete(\''+esc(r.id)+'\')">'+ic('trash',16)+'</div>'
     +'</div></div>'
